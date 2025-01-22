@@ -2,3 +2,6 @@
 cairo_test = "2.9.2"
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.32.0" }
 
+scarb 2.7.0 (e9a2b8716 2024-08-01)
+cairo: 2.7.0 (https://crates.io/crates/cairo-lang-compiler/2.7.0)
+sierra: 1.6.0
