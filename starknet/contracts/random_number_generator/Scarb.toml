@@ -11,7 +11,7 @@ openzeppelin_token = "0.20.0"
 pragma_lib = { git = "https://github.com/astraly-labs/pragma-lib" }
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.33.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.34.0" }
 assert_macros = "2.9.2"
 
 [[target.starknet-contract]]
