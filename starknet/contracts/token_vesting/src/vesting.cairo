@@ -3,6 +3,7 @@ use starknet::ContractAddress;
 #[derive(Drop, Serde, Copy, starknet::Store)]
 pub struct Schedule {
     recipient: ContractAddress,
+    token: ContractAddress,
     start_time: u64,
     cliff_time: u64,
     end_time: u64,
@@ -16,9 +17,9 @@ pub trait IVesting<ContractState> {
         ref self: ContractState,
         token: ContractAddress,
         recipient: ContractAddress,
-        start_time: u256,
-        cliff_time: u256,
-        end_time: u256,
+        start_time: u64,
+        cliff_time: u64,
+        end_time: u64,
         total_amount: u256,
     );
 
@@ -42,13 +43,9 @@ pub trait IVesting<ContractState> {
 
     fn claim(ref self: ContractState, token: ContractAddress);
 
-    fn get_vested_amount(
-        self: @ContractState, token: ContractAddress, user: ContractAddress,
-    ) -> u256;
+    fn get_vested_amount(self: @ContractState, user: ContractAddress) -> u256;
 
-    fn get_claimable_amount(
-        self: @ContractState, token: ContractAddress, user: ContractAddress,
-    ) -> u256;
+    fn get_claimable_amount(self: @ContractState, user: ContractAddress) -> u256;
 
     fn get_user_vesting_schedule(self: @ContractState, user: ContractAddress) -> Schedule;
 }
@@ -61,13 +58,16 @@ pub mod Vesting {
     use openzeppelin_access::ownable::OwnableComponent;
     use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
     use core::starknet::{
-        ContractAddress, get_block_timestamp, get_caller_address, get_contract_address, contract_address_const
+        ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
+        contract_address_const,
     };
-    use core::starknet::storage::Map;
+    use core::starknet::storage::{
+        StoragePointerReadAccess, StoragePointerWriteAccess, Map, StoragePathEntry,
+    };
 
     // Ownable Component
     component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
-  
+
     // Ownable Mixin
     #[abi(embed_v0)]
     impl OwnableMixinImpl = OwnableComponent::OwnableMixinImpl<ContractState>;
@@ -136,9 +136,9 @@ pub mod Vesting {
             ref self: ContractState,
             token: ContractAddress,
             recipient: ContractAddress,
-            start_time: u256,
-            cliff_time: u256,
-            end_time: u256,
+            start_time: u64,
+            cliff_time: u64,
+            end_time: u64,
             total_amount: u256,
         ) {
             self.ownable.assert_only_owner();
@@ -146,12 +146,16 @@ pub mod Vesting {
             assert(cliff_time >= start_time, Errors::INVALID_CLIFF_TIME);
             assert(end_time >= cliff_time, Errors::INVALID_END_TIME);
 
-            let this_contract = get_contract_address()
+            let this_contract = get_contract_address();
             let token_dispatcher = IERC20Dispatcher { contract_address: token };
-            assert(token_dispatcher.transfer(this_contract, total_amount), Errors::TOKEN_TRANSFER_FAILED);
+            assert(
+                token_dispatcher.transfer(this_contract, total_amount),
+                Errors::TOKEN_TRANSFER_FAILED,
+            );
 
             let new_schedule = Schedule {
                 recipient: recipient,
+                token: token,
                 start_time: start_time,
                 cliff_time: cliff_time,
                 end_time: end_time,
@@ -168,7 +172,7 @@ pub mod Vesting {
                         start_time: start_time,
                         cliff_time: cliff_time,
                         end_time: end_time,
-                        amount: amount,
+                        amount: total_amount,
                     },
                 );
         }
@@ -177,9 +181,9 @@ pub mod Vesting {
             ref self: ContractState,
             token: ContractAddress,
             recipient: ContractAddress,
-            start_time: u256,
-            cliff_time: u256,
-            end_time: u256,
+            start_time: u64,
+            cliff_time: u64,
+            end_time: u64,
             total_amount: u256,
             percentage: u256,
         ) {
@@ -190,7 +194,12 @@ pub mod Vesting {
             self.add_schedule(token, recipient, start_time, cliff_time, end_time, lock_amount);
         }
 
-        fn remove_schedule(ref self: ContractState, token: ContractAddress, address_to_end: ContractAddress, refund_address: ContractAddress) {
+        fn remove_schedule(
+            ref self: ContractState,
+            token: ContractAddress,
+            address_to_end: ContractAddress,
+            refund_address: ContractAddress,
+        ) {
             self.ownable.assert_only_owner();
             let mut amount_refundable = 0;
             let mut amount_withdrawable = 0;
@@ -199,7 +208,7 @@ pub mod Vesting {
 
             if get_block_timestamp() < schedule.cliff_time {
                 amount_refundable = schedule.total_amount;
-            }else{
+            } else {
                 let amount_vested = self.get_vested_amount(address_to_end);
                 amount_withdrawable = amount_vested - schedule.total_claimed;
                 amount_refundable = schedule.total_amount - amount_vested;
@@ -209,7 +218,8 @@ pub mod Vesting {
                 let token_dispatcher = IERC20Dispatcher { contract_address: token };
 
                 assert(
-                    token_dispatcher.transfer(refund_address, amount_refundable), Errors::TOKEN_TRANSFER_FAILED,
+                    token_dispatcher.transfer(refund_address, amount_refundable),
+                    Errors::TOKEN_TRANSFER_FAILED,
                 );
             }
 
@@ -217,32 +227,35 @@ pub mod Vesting {
                 let token_dispatcher = IERC20Dispatcher { contract_address: token };
 
                 assert(
-                    token_dispatcher.transfer(address_to_end, amount_withdrawable), Errors::TOKEN_TRANSFER_FAILED,
+                    token_dispatcher.transfer(address_to_end, amount_withdrawable),
+                    Errors::TOKEN_TRANSFER_FAILED,
                 );
             }
 
             let empty_schedule = Schedule {
                 recipient: self.zero_address(),
-                token: self.zero_address(),
+                token: token,
                 start_time: 0,
                 cliff_time: 0,
                 end_time: 0,
-                amount: 0,
+                total_claimed: 0,
+                total_amount: 0,
             };
 
             self.schedules.entry(address_to_end).write(empty_schedule);
 
-            self.emit(
-                VestingEndedByOwner {
-                    address_ended: address_to_end,
-                    token: token,
-                    amount_withdrawn: amount_withdrawable,
-                    amount_refunded: amount_refundable,
-                }
-            )
+            self
+                .emit(
+                    VestingEndedByOwner {
+                        address_ended: address_to_end,
+                        token: token,
+                        amount_withdrawn: amount_withdrawable,
+                        amount_refunded: amount_refundable,
+                    },
+                )
         }
 
-        fn claim(ref self: ContractState, token: ContractAddress){
+        fn claim(ref self: ContractState, token: ContractAddress) {
             let caller = get_caller_address();
             let schedule = self.get_user_vesting_schedule(caller);
             let claimable = self.get_claimable_amount(caller);
@@ -254,49 +267,40 @@ pub mod Vesting {
 
                 let token_dispatcher = IERC20Dispatcher { contract_address: token };
 
-                assert(
-                    token_dispatcher.transfer(caller, claimable), Errors::TOKEN_TRANSFER_FAILED,
-                );
+                assert(token_dispatcher.transfer(caller, claimable), Errors::TOKEN_TRANSFER_FAILED);
 
-                self
-                    .emit(
-                        SuccessfulClaim {
-                            recipient: caller,
-                            token: token,
-                            amount: claimable,
-                        },
-                );
+                self.emit(SuccessfulClaim { recipient: caller, token: token, amount: claimable });
             }
         }
 
-        fn get_vested_amount(self: ContractState, user: ContractAddress) -> u256 {
+        fn get_vested_amount(self: @ContractState, user: ContractAddress) -> u256 {
             let schedule = self.get_user_vesting_schedule(user);
-            
+
             let now = get_block_timestamp();
 
             if now < schedule.cliff_time {
                 0
-            }else if now >= schedule.end_time {
+            } else if now >= schedule.end_time {
                 schedule.total_amount
-            }else {
+            } else {
                 let elapsed_time = now - schedule.start_time;
                 let total_duration = schedule.end_time - schedule.start_time;
                 (schedule.total_amount * elapsed_time.into()) / total_duration.into()
             }
         }
 
-        fn get_claimable_amount(self: ContractState, user: ContractAddress) -> u256 {
+        fn get_claimable_amount(self: @ContractState, user: ContractAddress) -> u256 {
             let schedule = self.get_user_vesting_schedule(user);
             let vested_amount = self.get_vested_amount(user);
 
             if vested_amount > schedule.total_claimed {
                 vested_amount - schedule.total_claimed
-            }else{
+            } else {
                 0
             }
         }
 
-        fn get_user_vesting_schedule(self: ContractState, user: ContractAddress) -> Schedule {
+        fn get_user_vesting_schedule(self: @ContractState, user: ContractAddress) -> Schedule {
             self.schedules.entry(user).read()
         }
     }
