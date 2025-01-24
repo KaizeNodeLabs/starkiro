@@ -1,3 +1,10 @@
+/// Binary search implementation with O(log n) complexity
+/// Returns Some(index) if found, None if not found
+/// Requires input array to be sorted in ascending order
+/// # Arguments
+/// * `span` - Sorted span to search in
+/// * `val` - Target value to find
+
 #[derive(Copy, Drop)]
 struct State<T> {
     span: Span<T>,
