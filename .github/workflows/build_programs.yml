@@ -7,16 +7,27 @@ on:
     branches: ["main"]
 
 jobs:
-  build:
+  compile_and_verify:
     runs-on: ubuntu-latest
-    name: Build
+
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Scarb
-        uses: software-mansion/setup-scarb@v1
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          scarb-version: "2.8.5"
+          fetch-depth: 0
 
-      - name: Run Scarb Build
-        run: scarb build
+      - name: Configure upstream repository
+        run: |
+          git remote add upstream https://github.com/KaizeNodeLabs/starkiro
+          git fetch upstream main
+
+      - name: Install scarb
+        uses: software-mansion/setup-scarb@v1
+
+      - name: Install snforge
+        uses: foundry-rs/setup-snfoundry@v3
+
+      - name: Run build script
+        run: |
+          chmod +x ./build_programs.sh
+          ./build_programs.sh
