@@ -7,7 +7,7 @@ use alexandria_data_structures::vec::{Felt252Vec, VecTrait};
 /// # Returns
 /// * `Felt252Vec<T>` - Sorted array
 
-use super::interface::SortableVec;
+use super::SortableVec;
 
 pub impl QuickSort of SortableVec {
     fn sort<T, +Copy<T>, +Drop<T>, +PartialOrd<T>, +Felt252DictValue<T>>(
