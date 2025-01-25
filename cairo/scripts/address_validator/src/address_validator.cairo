@@ -3,18 +3,18 @@ use starknet::{ContractAddress};
 
 
 /// Check whether address felt is a valid starknet address
-fn validate_starknet_address(address: felt252) -> (bool, felt252) {
+fn validate_starknet_address(address: felt252) -> (bool, ByteArray) {
     // Check if address is zero
     if address == Zero::zero() {
-        return (false, 'Zero Address');
+        return (false, "Zero Address");
     }
 
     // Check if felt is a valid a starknet address
     let contract_address: Option<ContractAddress> = address.try_into();
     if let Option::Some(_) = contract_address {
-        return (true, 'Valid starknet address');
+        return (true, "Valid starknet address");
     }
-    return (false, 'Invalid Address');
+    return (false, "Invalid Address");
 }
 
 
@@ -23,8 +23,9 @@ fn main() {
         0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
     );
     if (check) {
-        print!("{}", msg);
+        println!("{}", msg);
     } else {
-        print!("Invalid Address - Error: {}", msg);
+        println!("Invalid Address - Error: {}", msg);
     }
+    println!("Hello world");
 }
