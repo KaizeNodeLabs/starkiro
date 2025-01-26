@@ -2,13 +2,19 @@ use starknet::ContractAddress;
 
 #[derive(Drop, Serde, Copy, starknet::Store)]
 pub struct Schedule {
-    recipient: ContractAddress,
-    token: ContractAddress,
-    start_time: u64,
-    cliff_time: u64,
-    end_time: u64,
-    total_claimed: u256,
-    total_amount: u256,
+    pub recipient: ContractAddress,
+    pub token: ContractAddress,
+    pub start_time: u64,
+    pub cliff_time: u64,
+    pub end_time: u64,
+    pub total_claimed: u256,
+    pub total_amount: u256,
+}
+
+
+#[starknet::interface]
+pub trait IOwnable<ContractState> {
+    fn owner(self: @ContractState) -> ContractAddress;
 }
 
 #[starknet::interface]
@@ -119,9 +125,10 @@ pub mod Vesting {
         pub const ZERO_ADDRESS: felt252 = 'Zero address detected';
         pub const ZERO_AMOUNT: felt252 = 'Amount cannot be zero';
         pub const INVALID_CLIFF_TIME: felt252 = 'Cliff time is invalid';
-        pub const INVALID_END_TIME: felt252 = 'End time provided is invalid';
-        pub const INVALID_PERCENTAGE: felt252 = 'Percentage provided is invalid';
+        pub const INVALID_END_TIME: felt252 = 'End time is invalid';
+        pub const INVALID_PERCENTAGE: felt252 = 'Percentage greater than 100';
         pub const TOKEN_TRANSFER_FAILED: felt252 = 'Token transfer failed';
+        pub const ALREADY_HAS_LOCK: felt252 = 'User already has lock';
     }
 
     #[constructor]
@@ -145,6 +152,10 @@ pub mod Vesting {
             assert(total_amount > 0, Errors::ZERO_AMOUNT);
             assert(cliff_time >= start_time, Errors::INVALID_CLIFF_TIME);
             assert(end_time >= cliff_time, Errors::INVALID_END_TIME);
+
+            let schedule = self.get_user_vesting_schedule(recipient);
+
+            assert(schedule.total_amount == 0, Errors::ALREADY_HAS_LOCK);
 
             let this_contract = get_contract_address();
             let token_dispatcher = IERC20Dispatcher { contract_address: token };
