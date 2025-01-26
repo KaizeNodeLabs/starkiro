@@ -27,5 +27,4 @@ fn main() {
     } else {
         println!("Invalid Address - Error: {}", msg);
     }
-    println!("Hello world");
 }
