@@ -1,10 +1,10 @@
-fn factorial(mut n: u128) -> u128 {
+fn factorial(mut n: i128) -> i128 {
     // The factorial of 0 is 1
     if n == 0 {
         return 1;
     }
     
-    let mut result: u128 = 1;
+    let mut result: i128 = 1;
     while n > 0 {
         result = result * n;
         n -= 1;
@@ -13,7 +13,11 @@ fn factorial(mut n: u128) -> u128 {
 }
 
 fn main() {
-    let mut n: u128 = 8;
+    let mut n: i128 = -8;
+    if n < 0 {
+        println!("Error: Factorial is not defined for negative numbers");
+        return;
+    }
     let result = factorial(n);
     println!("factorial of {n} is {result}");
 }
