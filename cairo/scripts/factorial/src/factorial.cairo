@@ -15,7 +15,7 @@ fn factorial(mut n: i128) -> i128 {
 fn main() {
     let mut n: i128 = -8;
     if n < 0 {
-        println!("Error: Factorial is not defined for negative numbers");
+        println!("Error: Factorial is not defined for negative numbers ({n})");
         return;
     }
     let result = factorial(n);
