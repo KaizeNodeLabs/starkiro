@@ -1,4 +1,4 @@
-use starknet::{ContractAddress};
+use starknet::{ContractAddress,contract_address_const};
 
 use snforge_std::{
     declare, ContractClassTrait,
@@ -11,6 +11,11 @@ use staking::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 const ONE_E18: u256 = 1000000000000000000_u256;
 
+fn OWNER() -> ContractAddress {
+    let contract_address: ContractAddress = contract_address_const::<0x123626789>();
+    contract_address
+}
+
 fn deploy_token_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name).unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -18,7 +23,7 @@ fn deploy_token_contract(name: ByteArray) -> ContractAddress {
 }
 
 fn deploy_staking_contract(name: ByteArray, staking_token: ContractAddress, reward_token: ContractAddress) -> ContractAddress {
-    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let owner: ContractAddress = OWNER();
 
     let mut constructor_calldata = ArrayTrait::new();
     constructor_calldata.append(owner.into());
@@ -39,7 +44,7 @@ fn test_token_mint() {
     let staking_token = IERC20Dispatcher { contract_address: staking_token_address };
     let reward_token = IERC20Dispatcher { contract_address: reward_token_address };
 
-    let receiver: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let receiver: ContractAddress = OWNER();
 
     let mint_amount: u256 = 10000_u256;
     staking_token.mint(receiver, mint_amount);
@@ -59,7 +64,7 @@ fn test_staking_constructor() {
 
     let staking_contract = IStakingDispatcher { contract_address: staking_contract_address };
 
-    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let owner: ContractAddress = OWNER();
 
     assert!(staking_contract.owner() == owner, "wrong owner");
     assert!(staking_contract.staking_token() == staking_token_address, "wrong staking token address");
@@ -88,7 +93,7 @@ fn test_set_rewards_duration() {
 
     let staking_contract = IStakingDispatcher { contract_address: staking_contract_address };
 
-    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let owner: ContractAddress = OWNER();
     let duration: u256 = 1800_u256;
     
     // using a block timestamp cheat to avoid get_block_timestamp() from returning 0: which is default on test environment
@@ -113,7 +118,7 @@ fn test_notify_reward_amount() {
     let reward_token = IERC20Dispatcher { contract_address: reward_token_address };
     let staking_contract = IStakingDispatcher { contract_address: staking_contract_address };
 
-    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let owner: ContractAddress = OWNER();
 
     let mint_amount: u256 = 10000_u256 * ONE_E18;
     staking_token.mint(owner, mint_amount);
@@ -150,7 +155,7 @@ fn test_stake() {
     let reward_token = IERC20Dispatcher { contract_address: reward_token_address };
     let staking_contract = IStakingDispatcher { contract_address: staking_contract_address };
 
-    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let owner: ContractAddress = OWNER();
 
     let mint_amount: u256 = 10000_u256 * ONE_E18;
     staking_token.mint(owner, mint_amount);
@@ -210,7 +215,7 @@ fn test_earned() {
     let reward_token = IERC20Dispatcher { contract_address: reward_token_address };
     let staking_contract = IStakingDispatcher { contract_address: staking_contract_address };
 
-    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let owner: ContractAddress = OWNER();
 
     let mint_amount: u256 = 10000_u256 * ONE_E18;
     staking_token.mint(owner, mint_amount);
