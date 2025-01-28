@@ -11,7 +11,6 @@ pub struct Schedule {
     pub total_amount: u256,
 }
 
-
 #[starknet::interface]
 pub trait IOwnable<ContractState> {
     fn owner(self: @ContractState) -> ContractAddress;
@@ -27,17 +26,6 @@ pub trait IVesting<ContractState> {
         cliff_time: u64,
         end_time: u64,
         total_amount: u256,
-    );
-
-    fn add_schedule_with_percentage(
-        ref self: ContractState,
-        token: ContractAddress,
-        recipient: ContractAddress,
-        start_time: u64,
-        cliff_time: u64,
-        end_time: u64,
-        total_amount: u256,
-        percentage: u256,
     );
 
     fn remove_schedule(
@@ -158,9 +146,12 @@ pub mod Vesting {
             assert(schedule.total_amount == 0, Errors::ALREADY_HAS_LOCK);
 
             let this_contract = get_contract_address();
+
             let token_dispatcher = IERC20Dispatcher { contract_address: token };
+            let caller = get_caller_address();
+
             assert(
-                token_dispatcher.transfer(this_contract, total_amount),
+                token_dispatcher.transfer_from(caller, this_contract, total_amount),
                 Errors::TOKEN_TRANSFER_FAILED,
             );
 
@@ -186,23 +177,6 @@ pub mod Vesting {
                         amount: total_amount,
                     },
                 );
-        }
-
-        fn add_schedule_with_percentage(
-            ref self: ContractState,
-            token: ContractAddress,
-            recipient: ContractAddress,
-            start_time: u64,
-            cliff_time: u64,
-            end_time: u64,
-            total_amount: u256,
-            percentage: u256,
-        ) {
-            self.ownable.assert_only_owner();
-            assert(percentage <= 100, Errors::INVALID_PERCENTAGE);
-
-            let lock_amount = (total_amount * percentage) / 100;
-            self.add_schedule(token, recipient, start_time, cliff_time, end_time, lock_amount);
         }
 
         fn remove_schedule(
@@ -245,7 +219,7 @@ pub mod Vesting {
 
             let empty_schedule = Schedule {
                 recipient: self.zero_address(),
-                token: token,
+                token: self.zero_address(),
                 start_time: 0,
                 cliff_time: 0,
                 end_time: 0,
