@@ -10,7 +10,7 @@ starknet = "2.9.2"
 alexandria_data_structures = { git = "https://github.com/keep-starknet-strange/alexandria.git" }
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.31.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.34.0" }
 assert_macros = "2.9.2"
 
 [[target.starknet-contract]]

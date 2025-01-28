@@ -8,4 +8,4 @@ edition = "2024_07"
 [dependencies]
 
 [dev-dependencies]
-cairo_test = "2.8.5"
+cairo_test = "2.9.2"
