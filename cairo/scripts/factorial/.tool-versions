@@ -1,0 +1,6 @@
+cargo: 1.84.0 (66221abde 2024-11-19)
+scarb 2.9.2 (5070ff374 2024-12-11)
+cairo: 2.9.2 (https://crates.io/crates/cairo-lang-compiler/2.9.2)
+sierra: 1.6.0
+asdf: v0.15.0-31e8c93
+snforge: 0.34.0

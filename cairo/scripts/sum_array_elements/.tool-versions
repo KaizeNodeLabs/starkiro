@@ -1,1 +1,3 @@
-scarb 2.7.0
+scarb 2.9.2
+cairo: 2.9.2
+sierra: 1.6.0
