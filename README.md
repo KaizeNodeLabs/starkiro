@@ -116,6 +116,10 @@ sncast account create \
 ```
 Save the output address and max_fee information.
 
+![image](https://github.com/user-attachments/assets/a1038a13-4860-496e-9584-9d7c540aaf23)
+https://sepolia.starkscan.co/contract/0x03d18e21dcb1f460c287af9b84e6da83b5577569e69371d39ad3415067abdbc4
+
+
 2. Get test tokens:
    - Visit [Sepolia STRK Faucet](https://faucet.sepolia.starknet.io/strk)
    - Visit [Sepolia ETH Faucet](https://faucet.sepolia.starknet.io/eth)
@@ -129,6 +133,10 @@ sncast account deploy \
     --name my_deployer_account
 ```
 
+![image](https://github.com/user-attachments/assets/23ef6213-8a84-477f-8fd1-51a76558d558)
+https://sepolia.starkscan.co/tx/0x073e6c7e7efea34708a73fcfdbfa5fef911e5516a5e7ea6b48814c6d4c4bd281
+
+
 ## Contract Deployment
 
 1. Declare the contract:
@@ -139,6 +147,12 @@ sncast --account my_deployer_account declare \
 ```
 Save the class_hash from the output.
 
+![image](https://github.com/user-attachments/assets/f1db05e8-5e5c-49c3-8464-77ec9c88ab19)
+https://sepolia.starkscan.co/class/0x0574f6f6f9c70bbbcd08260a78653e1a21e48c4027375d2113e286883c9e513f
+https://sepolia.starkscan.co/tx/0x00a678cb5bfed2508583f27e82879dd1e2f7c6010b1b8435c7829def3192bc24
+
+
+
 2. Deploy the declared contract:
 ```bash
 sncast --account my_deployer_account deploy \
@@ -146,6 +160,12 @@ sncast --account my_deployer_account deploy \
     --class-hash YOUR_CLASS_HASH
 ```
 Save the contract_address from the output.
+
+![image](https://github.com/user-attachments/assets/014a2082-b549-4369-9040-d7e14e4ed967)
+https://sepolia.starkscan.co/contract/0x003b6059a58c96c5db118808d722f240797223900248201250e9e8b4aa34c033
+https://sepolia.starkscan.co/tx/0x005abf392b7828aae946f271b5560ec54414dfaf5b324de14deb4f1fd5fa19a5
+
+
 
 ## Verifying Deployment
 
@@ -157,6 +177,10 @@ sncast --account my_deployer_account invoke \
     --function set_hello_world
 ```
 
+![image](https://github.com/user-attachments/assets/5239e43b-5a61-4eff-bb85-a0fd9cdf4bd2)
+https://sepolia.starkscan.co/tx/0x076143df3b9b9341a39b205a600177f632b96b4f38430569ee3d15deb57b8466
+
+
 2. Read the value:
 ```bash
 sncast --account my_deployer_account call \
@@ -164,6 +188,9 @@ sncast --account my_deployer_account call \
     --contract-address YOUR_CONTRACT_ADDRESS \
     --function get_hello_world
 ```
+
+![image](https://github.com/user-attachments/assets/08c4bde6-7713-4e17-b8f7-5f37b1a3ee5c)
+
 <!-- Deploying smart contract on sepolia using sncast 👆 -->
 
 ## ⚙️ Steps to build and and test contracts
