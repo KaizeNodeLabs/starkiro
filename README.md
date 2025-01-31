@@ -84,7 +84,87 @@ To execute the main function of the script, use:
 ```bash
 scarb cairo-run
 ```
+<!-- Deploying smart contract on sepolia using sncast 👇 -->
+# Deploying Smart Contracts on Sepolia using sncast
 
+This guide demonstrates how to deploy a Starknet smart contract to Sepolia testnet using `sncast`. We'll use the SimpleHelloWorld contract as an example.
+
+## Building the Contract
+
+1. Navigate to the hello_world contract directory:
+```bash
+cd starknet/contracts/hello_world
+```
+
+2. Build the contract:
+```bash
+scarb build
+```
+
+3. Run tests to ensure everything works:
+```bash
+scarb test
+```
+
+## Account Setup
+
+1. Create a new account:
+```bash
+sncast account create \
+    --url https://free-rpc.nethermind.io/sepolia-juno/v0_7 \
+    --name my_deployer_account
+```
+Save the output address and max_fee information.
+
+2. Get test tokens:
+   - Visit [Sepolia STRK Faucet](https://faucet.sepolia.starknet.io/strk)
+   - Visit [Sepolia ETH Faucet](https://faucet.sepolia.starknet.io/eth)
+   - Request tokens for your account address
+   - Wait for confirmation on [Starkscan](https://sepolia.starkscan.co)
+
+3. Deploy your account:
+```bash
+sncast account deploy \
+    --url https://free-rpc.nethermind.io/sepolia-juno/v0_7 \
+    --name my_deployer_account
+```
+
+## Contract Deployment
+
+1. Declare the contract:
+```bash
+sncast --account my_deployer_account declare \
+    --url https://free-rpc.nethermind.io/sepolia-juno/v0_7 \
+    --contract-name SimpleHelloWorld
+```
+Save the class_hash from the output.
+
+2. Deploy the declared contract:
+```bash
+sncast --account my_deployer_account deploy \
+    --url https://free-rpc.nethermind.io/sepolia-juno/v0_7 \
+    --class-hash YOUR_CLASS_HASH
+```
+Save the contract_address from the output.
+
+## Verifying Deployment
+
+1. Set a value in the contract:
+```bash
+sncast --account my_deployer_account invoke \
+    --url https://free-rpc.nethermind.io/sepolia-juno/v0_7 \
+    --contract-address YOUR_CONTRACT_ADDRESS \
+    --function set_hello_world
+```
+
+2. Read the value:
+```bash
+sncast --account my_deployer_account call \
+    --url https://free-rpc.nethermind.io/sepolia-juno/v0_7 \
+    --contract-address YOUR_CONTRACT_ADDRESS \
+    --function get_hello_world
+```
+<!-- Deploying smart contract on sepolia using sncast 👆 -->
 
 ## ⚙️ Steps to build and and test contracts
 
