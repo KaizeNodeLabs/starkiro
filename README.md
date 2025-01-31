@@ -86,7 +86,7 @@ scarb cairo-run
 ```
 <!-- Deploying smart contract on sepolia using sncast 👇 -->
 
-# 🚀 Deploying Smart Contracts on Sepolia using sncast
+# 🚀 Deploying Smart Contracts on Sepolia testnet using sncast
 
 ## 📖 Overview
 
@@ -120,12 +120,14 @@ sncast account create \
 
 ⚠️ **Important**: Save the output address and max_fee information
 
+In this case, account address : 0x03d18e21dcb1f460c287af9b84e6da83b5577569e69371d39ad3415067abdbc4
+
 ![Account Creation](https://github.com/user-attachments/assets/a1038a13-4860-496e-9584-9d7c540aaf23)
 
 🔍 View your account at:
 https://sepolia.starkscan.co/contract/0x03d18e21dcb1f460c287af9b84e6da83b5577569e69371d39ad3415067abdbc4
 
-#### Get Test Tokens
+#### Get Test Tokens (or fund with Sepolia test tokens from existing braavos or argent x wallet )
 1. Visit [Sepolia STRK Faucet](https://faucet.sepolia.starknet.io/strk)
 2. Visit [Sepolia ETH Faucet](https://faucet.sepolia.starknet.io/eth)
 3. Request tokens for your account address
@@ -156,6 +158,8 @@ sncast --account my_deployer_account declare \
 
 ![Contract Declaration](https://github.com/user-attachments/assets/f1db05e8-5e5c-49c3-8464-77ec9c88ab19)
 
+Class-hash : 0x0574f6f6f9c70bbbcd08260a78653e1a21e48c4027375d2113e286883c9e513f
+
 🔍 Verify declaration:
 - Class: https://sepolia.starkscan.co/class/0x0574f6f6f9c70bbbcd08260a78653e1a21e48c4027375d2113e286883c9e513f
 - Transaction: https://sepolia.starkscan.co/tx/0x00a678cb5bfed2508583f27e82879dd1e2f7c6010b1b8435c7829def3192bc24
@@ -168,6 +172,8 @@ sncast --account my_deployer_account deploy \
 ```
 
 ![Contract Deployment](https://github.com/user-attachments/assets/014a2082-b549-4369-9040-d7e14e4ed967)
+
+Contract deployed at address : 0x003b6059a58c96c5db118808d722f240797223900248201250e9e8b4aa34c033
 
 🔍 Track deployment:
 - Contract: https://sepolia.starkscan.co/contract/0x003b6059a58c96c5db118808d722f240797223900248201250e9e8b4aa34c033
