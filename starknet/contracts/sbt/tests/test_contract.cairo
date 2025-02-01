@@ -18,10 +18,14 @@ fn deploy_contract() -> ContractAddress {
     contract_address
 }
 
+fn get_jon_address() -> ContractAddress {
+    contract_address_const::<'JON'>()
+}
+
 #[test]
 fn test_mint_SBT() {
     let contract_address = deploy_contract();
-    let jon: ContractAddress = contract_address_const::<'JON'>();
+    let jon: ContractAddress = get_jon_address();
 
     let dispatcher = ISBTDispatcher { contract_address };
 
@@ -34,7 +38,7 @@ fn test_mint_SBT() {
 #[test]
 fn test_burn_SBT() {
     let contract_address = deploy_contract();
-    let jon: ContractAddress = contract_address_const::<'JON'>();
+    let jon: ContractAddress = get_jon_address();
 
     let dispatcher = ISBTDispatcher { contract_address };
 
@@ -56,7 +60,7 @@ fn test_burn_SBT() {
 #[should_panic(expected: "SBT: Tokens are non-transferable" )]
 fn test_transferFrom_reverts() {
     let contract_address = deploy_contract();
-    let jon: ContractAddress = contract_address_const::<'JON'>();
+    let jon: ContractAddress = get_jon_address();
 
     let dispatcher = ISBTDispatcher { contract_address };
 
@@ -72,7 +76,7 @@ fn test_transferFrom_reverts() {
 #[should_panic(expected: "SBT: Tokens are non-transferable")]
 fn test_safeTransferFrom_reverts() {
     let contract_address = deploy_contract();
-    let jon: ContractAddress = contract_address_const::<'JON'>();
+    let jon: ContractAddress = get_jon_address();
 
     let dispatcher = ISBTDispatcher { contract_address };
 
@@ -89,7 +93,7 @@ fn test_safeTransferFrom_reverts() {
 #[test]
 fn test_hash_any_sbt_fn() {
     let contract_address = deploy_contract();
-    let jon: ContractAddress = contract_address_const::<'JON'>();
+    let jon: ContractAddress = get_jon_address();
 
     let dispatcher = ISBTDispatcher { contract_address };
 
