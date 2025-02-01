@@ -108,14 +108,6 @@ version = "0.20.0"
 source = "git+https://github.com/openzeppelin/cairo-contracts?tag=v0.20.0#7756fd1de2b4ebd239fa6e372d75535cea02e5e5"
 
 [[package]]
-name = "simple_erc721"
-version = "0.1.0"
-dependencies = [
- "openzeppelin",
- "snforge_std",
-]
-
-[[package]]
 name = "snforge_scarb_plugin"
 version = "0.34.0"
 source = "git+https://github.com/foundry-rs/starknet-foundry?tag=v0.34.0#d6976d4635cbe69bd199fd502788c469d408ed2d"
@@ -126,4 +118,12 @@ version = "0.34.0"
 source = "git+https://github.com/foundry-rs/starknet-foundry?tag=v0.34.0#d6976d4635cbe69bd199fd502788c469d408ed2d"
 dependencies = [
  "snforge_scarb_plugin",
+]
+
+[[package]]
+name = "soulbound_token"
+version = "0.1.0"
+dependencies = [
+ "openzeppelin",
+ "snforge_std",
 ]

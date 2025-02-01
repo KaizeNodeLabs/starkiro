@@ -1,5 +1,5 @@
 [package]
-name = "soulbound token"
+name = "soulbound_token"
 version = "0.1.0"
 edition = "2023_11"
 
