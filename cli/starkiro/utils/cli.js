@@ -18,10 +18,10 @@ const flags = {
 };
 
 const commands = {
-	"--help": { desc: `Print help info` },
-	"--install-latest": { desc: `Install all latest versions to develop on Starknet and Dojo` },
-	"--install-versions": { desc: `Install given versions to develop on Starknet and Dojo` },
-	"--interactive": { desc: `Opens interactive mode` },
+	"help": { desc: `Print help info` },
+	"install": { desc: `Install all latest versions to develop on Starknet` },
+	"install-versions": { desc: `Install given versions to develop on Starknet` },
+	"interactive": { desc: `Opens interactive mode` },
 	
 };
 
