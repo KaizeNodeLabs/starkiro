@@ -11,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['hello_world', 'simple_counter', 'crowdfunding']  # Add your contract project names here
-    
+        project: ['counter_access_control', 'crowdfunding', 'escrow_multiple_recipients', 'flip_flop', 'hello_world', 'random_number_generator', 'sbt', 'simple_counter', 'simple_erc20', 'simple_erc721', 'staking', 'token_vesting']
+      max-parallel: 4
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +24,13 @@ jobs:
 
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v3
+
+      - name: Verify contract directory exists
+        run: |
+          if [ ! -d "./starknet/contracts/${{ matrix.project }}" ]; then
+            echo "Directory ./starknet/contracts/${{ matrix.project }} not found!"
+            exit 1
+          fi
 
       - name: Build and Test ${{ matrix.project }}
         working-directory: ./starknet/contracts/${{ matrix.project }}
