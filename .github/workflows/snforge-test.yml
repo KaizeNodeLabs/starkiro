@@ -19,13 +19,10 @@ jobs:
       - name: Setup Scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.3.1"
+          scarb-version: "2.9.2"
 
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v3
-
-      - name: Verify Snfoundry installation
-        run: snforge --version || echo "snforge is missing!"
 
       - name: Build and Test ${{ matrix.project }}
         working-directory: ./starknet/contracts/${{ matrix.project }}
