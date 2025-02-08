@@ -2,21 +2,17 @@ name: Test Starkiro Contracts
 
 on:
   push:
-    branches: ["main"]
-    paths:
-      - "src/**"
-      - "tests/**"
-      - "Scarb.toml"
+    branches: ["fix/snforge-workflow"]
   pull_request:
     branches: ["main"]
-    paths:
-      - "src/**"
-      - "tests/**"
-      - "Scarb.toml"
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ['hello_world', 'counter']  # Add your contract project names here
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -27,31 +23,17 @@ jobs:
 
       - name: Setup Starknet Foundry
         uses: foundry-rs/setup-snfoundry@v3
-        with:
-          starknet-foundry-version: "0.12.0"
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.scarb
-            target/
-          key: ${{ runner.os }}-scarb-${{ hashFiles('**/Scarb.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-scarb-
-
-      - name: Build contracts
-        run: scarb build
-
-      - name: Run tests
-        run: snforge test
+      - name: Build and Test ${{ matrix.project }}
+        working-directory: ./starknet/contracts/${{ matrix.project }}
+        run: |
+          scarb build
+          snforge test
 
       - name: Upload test logs
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs
-          path: |
-            target/snforge/*.log
-            target/dev/*.sierra
-          retention-days: 7
+          name: test-logs-${{ matrix.project }}
+          path: ./starknet/contracts/${{ matrix.project }}/target/
+          retention-days: 3
