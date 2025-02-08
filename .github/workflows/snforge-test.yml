@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: ['hello_world', 'simple_counter']  # Add your contract project names here
+        project: ['hello_world', 'simple_counter', 'crowdfunding']  # Add your contract project names here
     
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
         uses: foundry-rs/setup-snfoundry@v3
 
       - name: Verify Snfoundry installation
-      run: snforge --version || echo "snforge is missing!"
+        run: snforge --version || echo "snforge is missing!"
 
       - name: Build and Test ${{ matrix.project }}
         working-directory: ./starknet/contracts/${{ matrix.project }}
