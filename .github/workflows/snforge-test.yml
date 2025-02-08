@@ -1,4 +1,4 @@
-name: snforge Contract Test
+name: Test Starkiro Contracts
 
 on:
   push:
@@ -6,11 +6,13 @@ on:
     paths:
       - "src/**"
       - "tests/**"
+      - "Scarb.toml"
   pull_request:
     branches: ["main"]
     paths:
       - "src/**"
       - "tests/**"
+      - "Scarb.toml"
 
 jobs:
   test:
@@ -23,15 +25,33 @@ jobs:
         with:
           scarb-version: "2.3.1"
 
-      - name: Install snforge
-        run: curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+      - name: Setup Starknet Foundry
+        uses: foundry-rs/setup-snfoundry@v3
+        with:
+          starknet-foundry-version: "0.12.0"
 
-      - name: Run snforge tests
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.scarb
+            target/
+          key: ${{ runner.os }}-scarb-${{ hashFiles('**/Scarb.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-scarb-
+
+      - name: Build contracts
+        run: scarb build
+
+      - name: Run tests
         run: snforge test
 
-      - name: Upload test logs on failure
-        if: failure()
+      - name: Upload test logs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
-          path: target/snforge/*.log
+          path: |
+            target/snforge/*.log
+            target/dev/*.sierra
+          retention-days: 7
