@@ -7,12 +7,10 @@
  * @author danielcdz <https://github.com/danielcdz>
  */
 
-import * as p from '@clack/prompts';
-import { setTimeout } from 'node:timers/promises';
 import cli from './utils/cli.js';
 import init from './utils/init.js';
 import log from './utils/log.js';
-import ora from "ora"; // Ensure you have installed ora package
+import ora from "ora"; 
 import runsh from './scripts/runsh.js'
 
 const { flags, input, showHelp } = cli;
@@ -26,7 +24,7 @@ const { clear, debug } = flags;
 	if(input.includes('install')){
 		let spinner = ora("Installing asdf...").start();
 		try {
-			await runsh('/Users/danielcdz/Repos/starkiro/cli/starkiro/bash/install_asdf.sh', '');
+			await runsh('bash/install_asdf.sh', '');
 			
 			spinner.succeed("asdf installed successfully!"); // Stop the spinner
 		} catch (error) {
@@ -35,7 +33,7 @@ const { clear, debug } = flags;
 
 		spinner = ora("Adding scarb plugin...").start();
 		try {
-			await runsh('/Users/danielcdz/Repos/starkiro/cli/starkiro/bash/plugin_add.sh', '--plugin scarb');
+			await runsh('bash/plugin_add.sh', '--plugin scarb');
 			
 			spinner.succeed("scarb plugin added successfully!"); // Stop the spinner
 		} catch (error) {
@@ -44,7 +42,7 @@ const { clear, debug } = flags;
 
 		spinner = ora("Adding starknet-foundry plugin...").start();
 		try {
-			await runsh('/Users/danielcdz/Repos/starkiro/cli/starkiro/bash/plugin_add.sh', '--plugin starknet-foundry');
+			await runsh('bash/plugin_add.sh', '--plugin starknet-foundry');
 			
 			spinner.succeed("starknet-foundry plugin added successfully!"); // Stop the spinner
 		} catch (error) {
@@ -53,7 +51,7 @@ const { clear, debug } = flags;
 
 		spinner = ora("Installing scarb plugin...").start();
 		try {
-			await runsh('/Users/danielcdz/Repos/starkiro/cli/starkiro/bash/install_plugin.sh', '--plugin scarb --version latest');
+			await runsh('bash/install_plugin.sh', '--plugin scarb --version latest');
 			
 			spinner.succeed("scarb plugin installed successfully!"); // Stop the spinner
 		} catch (error) {
@@ -62,7 +60,7 @@ const { clear, debug } = flags;
 
 		spinner = ora("Installing starknet-foundry plugin...").start();
 		try {
-			await runsh('/Users/danielcdz/Repos/starkiro/cli/starkiro/bash/install_plugin.sh', '--plugin starknet-foundry --version latest');
+			await runsh('bash/install_plugin.sh', '--plugin starknet-foundry --version latest');
 			
 			spinner.succeed("starknet-foundry plugin installed successfully!"); // Stop the spinner
 		} catch (error) {

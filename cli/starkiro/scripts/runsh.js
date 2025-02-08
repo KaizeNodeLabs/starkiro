@@ -1,19 +1,17 @@
 import { exec } from "child_process";
 import { promisify } from "util";
+import path from "path";
 
-
-// Promisify exec to use async/await
 const execPromise = promisify(exec);
 
 export async function runsh(scriptPath, flag) {
     try {
-         
-        await execPromise(`bash ${scriptPath} ${flag}`);
-        
+        const absoluteScriptPath = path.resolve(scriptPath);
+
+        await execPromise(`bash ${absoluteScriptPath} ${flag}`);
     } catch (error) {
         console.error(`Error: ${error.message}`);
     }
 }
-
 
 export default runsh;

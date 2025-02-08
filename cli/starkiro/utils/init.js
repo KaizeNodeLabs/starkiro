@@ -7,8 +7,8 @@ export default async ({ clear = true }) => {
 	const pkgJson = await getPackageJson(`./../package.json`);
 
 	welcome({
-		title: `starkiro cli`,
-		tagLine: `by danielcdz`,
+		title: `starkiro`,
+		tagLine: `by Kaizenode Labs`,
 		description: pkgJson.description,
 		version: pkgJson.version,
 		bgColor: '#2200d4',
