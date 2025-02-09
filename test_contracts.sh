@@ -24,7 +24,7 @@ list_all_dirs() {
 # Function to process directory
 process_directory() {
   local directory="$1"
-  echo -e "${GREEN}Testing directory: $directory${NC}"
+  echo -e "\n${GREEN}=== Testing directory: $directory ===${NC}"
   
   local dir_path="${REPO_ROOT}/${directory}"
   if ! cd "$dir_path"; then
@@ -33,16 +33,20 @@ process_directory() {
     return
   fi
 
-  echo -e "${GREEN}Running scarb build and snforge test in: $directory${NC}"
-  if ! (scarb build && snforge test) >error.log 2>&1; then
-    echo -e "${RED}Tests failed in directory: $directory${NC}"
-    cat error.log
+  echo -e "${GREEN}Running scarb build...${NC}"
+  if ! scarb build; then
+    echo -e "${RED}Build failed in directory: $directory${NC}"
     echo "1" >> "$error_file"
-  else
-    echo -e "${GREEN}Tests succeeded in directory: $directory${NC}"
+    return
   fi
 
-  rm -f error.log
+  echo -e "${GREEN}Running snforge test...${NC}"
+  if ! snforge test; then
+    echo -e "${RED}Tests failed in directory: $directory${NC}"
+    echo "1" >> "$error_file"
+  else
+    echo -e "${GREEN}✓ All tests passed in: $directory${NC}"
+  fi
 }
 
 # Is there the -f flag?
