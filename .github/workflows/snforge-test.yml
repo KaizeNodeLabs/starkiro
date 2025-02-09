@@ -2,7 +2,7 @@ name: Test Starkiro Contracts
 
 on:
   push:
-    branches: ["fix/snforge-workflow"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
