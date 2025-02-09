@@ -18,13 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ensure Scarb.lock Exists
-        run: |
-          if [ ! -f Scarb.lock ]; then
-            echo "Scarb.lock not found. Generating it..."
-            scarb fetch || { echo "Failed to generate Scarb.lock"; exit 1; }
-          fi
-
       - name: Cache Scarb Dependencies
         uses: actions/cache@v3
         with:
