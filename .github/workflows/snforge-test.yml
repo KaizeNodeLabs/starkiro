@@ -2,7 +2,7 @@ name: Test Starkiro Contracts
 
 on:
   push:
-    branches: ["main"]
+    branches: ["fix/snforge-workflow"]
   pull_request:
     branches: ["main"]
 
@@ -10,13 +10,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    strategy:
-      matrix:
-        project: ['counter_access_control', 'crowdfunding', 'escrow_multiple_recipients', 'flip_flop', 'hello_world', 'random_number_generator', 'sbt', 'simple_counter', 'simple_erc20', 'simple_erc721', 'staking', 'token_vesting']
-      max-parallel: 4
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Cache Scarb Dependencies
         uses: actions/cache@v3
@@ -45,23 +43,15 @@ jobs:
             exit 1
           fi
 
-      - name: Verify contract directory exists
+      - name: Run Tests
         run: |
-          if [ ! -d "./starknet/contracts/${{ matrix.project }}" ]; then
-            echo "❌ Directory ./starknet/contracts/${{ matrix.project }} not found!"
-            exit 1
-          fi
+          chmod +x ./test_contracts.sh
+          ./test_contracts.sh
 
-      - name: Build & Test ${{ matrix.project }}
-        working-directory: ./starknet/contracts/${{ matrix.project }}
-        run: |
-          scarb build &  # Run build in background
-          snforge test   # Run tests
-        continue-on-error: true  
-
-      - name: Upload test logs (Always)
+      - name: Upload test logs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs-${{ matrix.project }}
-          path: ./starknet/contracts/${{ matrix.project }}/target/
+          name: test-logs
+          path: starknet/contracts/*/target/
           retention-days: 3
