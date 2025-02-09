@@ -31,10 +31,10 @@ process_directory() {
     echo -e "${RED}Failed to change to directory: $dir_path${NC}"
     echo "1" >> "$error_file"
     return
-  }
+  fi
 
   echo -e "${GREEN}Running scarb build and snforge test in: $directory${NC}"
-  if ! { scarb build && snforge test; } >error.log 2>&1; then
+  if ! (scarb build && snforge test) >error.log 2>&1; then
     echo -e "${RED}Tests failed in directory: $directory${NC}"
     cat error.log
     echo "1" >> "$error_file"
