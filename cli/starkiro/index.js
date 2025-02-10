@@ -8,10 +8,9 @@
  */
 
 import cli from './utils/cli.js';
+import executeScript from './utils/excecuteScript.js';
 import init from './utils/init.js';
 import log from './utils/log.js';
-import ora from "ora"; 
-import runsh from './scripts/runsh.js'
 
 const { flags, input, showHelp } = cli;
 const { clear, debug } = flags;
@@ -22,50 +21,11 @@ const { clear, debug } = flags;
 	debug && log(flags);
 
 	if(input.includes('install')){
-		let spinner = ora("Installing asdf...").start();
-		try {
-			await runsh('bash/install_asdf.sh', '');
-			
-			spinner.succeed("asdf installed successfully!"); // Stop the spinner
-		} catch (error) {
-			spinner.fail("Installation failed.");
-		}
-
-		spinner = ora("Adding scarb plugin...").start();
-		try {
-			await runsh('bash/plugin_add.sh', '--plugin scarb');
-			
-			spinner.succeed("scarb plugin added successfully!"); // Stop the spinner
-		} catch (error) {
-			spinner.fail("Installation failed.");
-		}
-
-		spinner = ora("Adding starknet-foundry plugin...").start();
-		try {
-			await runsh('bash/plugin_add.sh', '--plugin starknet-foundry');
-			
-			spinner.succeed("starknet-foundry plugin added successfully!"); // Stop the spinner
-		} catch (error) {
-			spinner.fail("Installation failed.");
-		}
-
-		spinner = ora("Installing scarb plugin...").start();
-		try {
-			await runsh('bash/install_plugin.sh', '--plugin scarb --version latest');
-			
-			spinner.succeed("scarb plugin installed successfully!"); // Stop the spinner
-		} catch (error) {
-			spinner.fail("Installation failed.");
-		}
-
-		spinner = ora("Installing starknet-foundry plugin...").start();
-		try {
-			await runsh('bash/install_plugin.sh', '--plugin starknet-foundry --version latest');
-			
-			spinner.succeed("starknet-foundry plugin installed successfully!"); // Stop the spinner
-		} catch (error) {
-			spinner.fail("Installation failed.");
-		}
+		await executeScript('bash/install_asdf.sh', '', "Installing asdf...", "asdf installed successfully!", "Installation failed.");
+        await executeScript('bash/plugin_add.sh', '--plugin scarb', "Adding scarb plugin...", "scarb plugin added successfully!", "Installation failed.");
+        await executeScript('bash/plugin_add.sh', '--plugin starknet-foundry', "Adding starknet-foundry plugin...", "starknet-foundry plugin added successfully!", "Installation failed.");
+        await executeScript('bash/install_plugin.sh', '--plugin scarb --version latest', "Installing scarb plugin...", "scarb plugin installed successfully!", "Installation failed.");
+        await executeScript('bash/install_plugin.sh', '--plugin starknet-foundry --version latest', "Installing starknet-foundry plugin...", "starknet-foundry plugin installed successfully!", "Installation failed.");
 	}
 	if(input.includes('install-versions')){
 		console.log("Installing versions");
