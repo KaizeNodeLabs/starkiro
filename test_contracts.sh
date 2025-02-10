@@ -14,9 +14,9 @@ echo -e "${GREEN}Repository root directory: $REPO_ROOT${NC}"
 list_modified_dirs() {
   # Ensure previous commit exists before running git diff
   if git rev-parse HEAD^ >/dev/null 2>&1; then
-    git diff --diff-filter=AM --name-only HEAD^ HEAD -- starknet/contracts | awk -F'/' '{print $1 "/" $2 "/" $3}' | sort -u
+    git diff --diff-filter=AM --name-only HEAD^ HEAD -- starknet/contracts | awk -F'/' '{print $1 "/" $2}' | sort -u
   else
-    git ls-files -- starknet/contracts | awk -F'/' '{print $1 "/" $2 "/" $3}' | sort -u
+    git ls-files -- starknet/contracts | awk -F'/' '{print $1 "/" $2}' | sort -u
   fi
 }
 
