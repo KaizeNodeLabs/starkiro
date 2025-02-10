@@ -10,13 +10,17 @@ error_file=$(mktemp)
 
 echo -e "${GREEN}Repository root directory: $REPO_ROOT${NC}"
 
-# function to list modified directories
+# Function to list modified directories
 list_modified_dirs() {
-  git diff --diff-filter=AM --name-only HEAD^ HEAD -- starknet/contracts | \
-    awk -F'/' '{print $1 "/" $2 "/" $3}' | sort -u
+  # Ensure previous commit exists before running git diff
+  if git rev-parse HEAD^ >/dev/null 2>&1; then
+    git diff --diff-filter=AM --name-only HEAD^ HEAD -- starknet/contracts | awk -F'/' '{print $1 "/" $2 "/" $3}' | sort -u
+  else
+    echo ""
+  fi
 }
 
-# function to list all directories
+# Function to list all directories
 list_all_dirs() {
   find starknet/contracts -mindepth 1 -maxdepth 1 -type d 2>/dev/null
 }
@@ -49,22 +53,27 @@ process_directory() {
   fi
 }
 
-# Is there the -f flag?
+# Determine directories to test
 force=false
 if [ "$1" == "-f" ]; then
   force=true
 fi
 
-# Get the list of directories to process
 if [ "$force" = true ]; then
   echo -e "${GREEN}Force flag detected, testing all directories...${NC}"
   modified_dirs=$(list_all_dirs)
 else
-  echo -e "${GREEN}Testing modified directories only...${NC}"
+  echo -e "${GREEN}Checking for modified directories...${NC}"
   modified_dirs=$(list_modified_dirs)
+
+  # Fallback to all directories if no changes detected
+  if [ -z "$modified_dirs" ]; then
+    echo -e "${GREEN}No modified files detected. Running tests on all directories...${NC}"
+    modified_dirs=$(list_all_dirs)
+  fi
 fi
 
-# Process each directory
+# Run tests for each directory
 for directory in $modified_dirs; do
   process_directory "$directory"
 done
@@ -75,11 +84,7 @@ if grep -q "1" "$error_file"; then
   rm "$error_file"
   exit 1
 else
-  if [ -z "$modified_dirs" ]; then
-    echo -e "\n${GREEN}No new changes detected${NC}"
-  else
-    echo -e "\n${GREEN}All tests completed successfully${NC}"
-  fi
+  echo -e "\n${GREEN}All tests completed successfully${NC}"
   rm "$error_file"
   exit 0
 fi
