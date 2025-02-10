@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x  # Enable debug mode for better error tracking
+
 GREEN='\033[1;32m'
 RED='\033[1;31m'
 NC='\033[0m'
@@ -16,7 +18,7 @@ list_modified_dirs() {
   if git rev-parse HEAD^ >/dev/null 2>&1; then
     git diff --diff-filter=AM --name-only HEAD^ HEAD -- starknet/contracts | awk -F'/' '{print $1 "/" $2 "/" $3}' | sort -u
   else
-    echo ""
+    git ls-files -- starknet/contracts | awk -F'/' '{print $1 "/" $2 "/" $3}' | sort -u
   fi
 }
 
@@ -72,6 +74,8 @@ else
     modified_dirs=$(list_all_dirs)
   fi
 fi
+
+echo -e "${GREEN}Directories to test: $modified_dirs${NC}"
 
 # Run tests for each directory
 for directory in $modified_dirs; do
