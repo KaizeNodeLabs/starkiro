@@ -73,7 +73,7 @@ To compile contracts in Remix using the Starknet plugin:
 
 3. **Copy and Paste the Contract Code**
    - Go to the [`stark-cairo-nodes`](https://github.com/KaizeNodeLabs/stark-cairo-nodes) repository.
-   - Navigate to `contracts/helloWorld/hello_world.cairo`.
+   - Navigate to `examples/contracts/helloWorld/hello_world.cairo`.
    - Copy the contents of the file.
    - Paste the code into the new `hello_world.cairo` file in Remix.
 
@@ -198,7 +198,7 @@ First, let's prepare and build our contract:
 
 ```bash
 # Navigate to the contract directory
-cd starknet/contracts/hello_world
+cd examples/starknet/contracts/hello_world
 
 # Build the contract
 scarb build

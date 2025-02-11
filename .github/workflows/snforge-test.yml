@@ -53,5 +53,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
-          path: starknet/contracts/**/target/
+          path: examples/starknet/contracts/**/target/
           retention-days: 3

@@ -14,15 +14,17 @@ echo -e "${GREEN}Repository root directory: $REPO_ROOT${NC}"
 list_modified_dirs() {
   # Ensure previous commit exists before running git diff
   if git rev-parse HEAD^ >/dev/null 2>&1; then
-    git diff --diff-filter=AM --name-only HEAD^ HEAD -- starknet/contracts | awk -F'/' '{print $1 "/" $2}' | sort -u
+    git diff --diff-filter=AM --name-only HEAD^ HEAD -- examples/starknet/contracts | awk -F'/' '{print $1 "/" $2 "/" $3 "/" $4}' | sort -u
   else
-    git ls-files -- starknet/contracts | awk -F'/' '{print $1 "/" $2}' | sort -u
+    git ls-files -- examples/starknet/contracts | awk -F'/' '{print $1 "/" $2 "/" $3 "/" $4}' | sort -u
   fi
 }
 
 # Function to list all directories
 list_all_dirs() {
-  find starknet/contracts -mindepth 1 -maxdepth 1 -type d 2>/dev/null
+  find examples/starknet/contracts -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while read -r dir; do
+    echo "$dir"
+  done
 }
 
 # Function to process directory
@@ -30,10 +32,29 @@ process_directory() {
   local directory="$1"
   echo -e "\n${GREEN}=== Testing directory: $directory ===${NC}"
   
+  # Store the original directory to return to later
+  local original_dir=$(pwd)
+  
   local dir_path="${REPO_ROOT}/${directory}"
+  
+  # Check if directory exists
+  if [ ! -d "$dir_path" ]; then
+    echo -e "${RED}Directory does not exist: $dir_path${NC}"
+    echo "1" >> "$error_file"
+    return
+  fi
+  
   if ! cd "$dir_path"; then
     echo -e "${RED}Failed to change to directory: $dir_path${NC}"
     echo "1" >> "$error_file"
+    return
+  fi
+
+  # Check if Scarb.toml exists
+  if [ ! -f "Scarb.toml" ]; then
+    echo -e "${RED}No Scarb.toml found in: $dir_path${NC}"
+    echo "1" >> "$error_file"
+    cd "$original_dir"
     return
   fi
 
@@ -41,6 +62,7 @@ process_directory() {
   if ! scarb build; then
     echo -e "${RED}Build failed in directory: $directory${NC}"
     echo "1" >> "$error_file"
+    cd "$original_dir"
     return
   fi
 
@@ -51,6 +73,9 @@ process_directory() {
   else
     echo -e "${GREEN}✓ All tests passed in: $directory${NC}"
   fi
+  
+  # Return to original directory
+  cd "$original_dir"
 }
 
 # Determine directories to test

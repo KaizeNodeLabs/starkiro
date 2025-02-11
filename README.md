@@ -57,10 +57,10 @@ scarb --version
 
 ### 2. 📂 **Navigate to the Scripts Directory**
 
-First, navigate to the general cairo/scripts/ directory:
+First, navigate to the general examples/cairo/scripts/ directory:
 
 ```bash
-cd cairo/scripts/
+cd examples/cairo/scripts/
 ```
 
 Then, navigate to the specific script's directory you want to run. For example, if the script you want to execute is in a folder named example_script, navigate into that directory:
