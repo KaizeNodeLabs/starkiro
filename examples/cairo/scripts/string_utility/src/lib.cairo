@@ -8,7 +8,7 @@ pub struct String {
 
 pub trait StringTrait {
     /// Create a new string
-    fn new() -> String;
+    fn new(data: ByteArray) -> String;
     /// Get the length of the string
     fn len(self: @String) -> usize;
     /// Concatenate two strings
@@ -21,10 +21,12 @@ pub trait StringTrait {
 
 impl StringImpl of StringTrait {
     /// Create a new string
+    /// Arguments:
+    /// - data: The data to create the string with
     /// Returns:
     /// - A new string
-    fn new() -> String {
-        String { data: Default::default() }
+    fn new(data: ByteArray) -> String {
+        String { data }
     }
 
     /// Get the length of the string
