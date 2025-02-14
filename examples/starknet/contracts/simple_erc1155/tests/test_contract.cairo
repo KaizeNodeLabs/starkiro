@@ -4,8 +4,7 @@ use starknet::{ContractAddress, contract_address_const};
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, cheat_caller_address, spy_events, CheatSpan,
 };
-
-use simple_erc1155::{
+use simple_erc1155::erc1155::{
     IERC1155Dispatcher, IERC1155DispatcherTrait, ERC1155::{Event, TransferBatch, TransferSingle},
 };
 
@@ -99,8 +98,8 @@ fn should_panic_when_spender_is_unauthorized() {
 #[test]
 fn test_transfer_on_behalf_of_owner() {
     let contract_address = deploy_contract();
-    let dispatcher = IERC1155Dispatcher { contract_address }; 
-    let spender = contract_address_const::<'SPENDER'>(); 
+    let dispatcher = IERC1155Dispatcher { contract_address };
+    let spender = contract_address_const::<'SPENDER'>();
     cheat_caller_address(contract_address, OWNER(), CheatSpan::TargetCalls(1));
     dispatcher.set_approval_for_all(spender, true);
 
@@ -109,15 +108,9 @@ fn test_transfer_on_behalf_of_owner() {
     let amount = 3500;
     let mut spy = spy_events();
     dispatcher.safe_transfer_from(OWNER(), spender, 1, amount, array![].span());
-    
+
     let transfer_event = Event::TransferSingle(
-        TransferSingle {
-            operator: spender,
-            from: OWNER(),
-            to: spender,
-            id: 1,
-            value: amount
-        }
+        TransferSingle { operator: spender, from: OWNER(), to: spender, id: 1, value: amount },
     );
 
     assert(dispatcher.balance_of(spender, 1) == amount, 'TRANSFER FAILED');
