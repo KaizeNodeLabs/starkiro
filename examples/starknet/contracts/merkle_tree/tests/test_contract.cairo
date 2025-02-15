@@ -217,3 +217,64 @@ fn test_verify_negative() {
             ) == false,
     );
 }
+
+#[test]
+fn test_generate_merkle_proof_6() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    let mut data = array!["1", "2", "3", "4", "5", "6"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    let proof = dispatcher.generate_merkle_proof(4, 6);
+    assert!(proof.len() == 3);
+    assert!(*proof.at(0) == *hashes.at(5));
+    assert!(*proof.at(1) == *hashes.at(9));
+    assert!(*proof.at(2) == *hashes.at(10));
+}
+
+#[test]
+fn test_generate_merkle_proof_7() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    let mut data = array!["1", "2", "3", "4", "5", "6", "7"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    let proof = dispatcher.generate_merkle_proof(3, 7);
+    assert!(proof.len() == 3);
+    assert!(*proof.at(0) == *hashes.at(2));
+    assert!(*proof.at(1) == *hashes.at(8));
+    assert!(*proof.at(2) == *hashes.at(13));
+}
+
+#[test]
+fn test_generate_merkle_proof_8() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    let mut data = array!["1", "2", "3", "4", "5", "6", "7", "8"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    let proof = dispatcher.generate_merkle_proof(5, 8);
+    assert!(proof.len() == 3);
+    assert!(*proof.at(0) == *hashes.at(4));
+    assert!(*proof.at(1) == *hashes.at(11));
+    assert!(*proof.at(2) == *hashes.at(12));
+}
+
+#[test]
+fn test_merkle_tree_proof_integration() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    let mut data = array!["1", "2", "3", "4", "5", "6", "7", "8"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    let proof = dispatcher.generate_merkle_proof(5, 8);
+    assert!(proof.len() == 3);
+    assert!(*proof.at(0) == *hashes.at(4));
+    assert!(*proof.at(1) == *hashes.at(11));
+    assert!(*proof.at(2) == *hashes.at(12));
+    assert!(dispatcher.verify(proof, root, *hashes.at(5), 5) == true);
+}

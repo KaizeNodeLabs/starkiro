@@ -6,6 +6,7 @@ pub trait IMerkleTree<TContractState> {
     fn verify(
         self: @TContractState, proof: Array<felt252>, root: felt252, leaf: felt252, index: usize,
     ) -> bool;
+    fn generate_merkle_proof(self: @TContractState, index: u64, data_length: u64) -> Array<felt252>;
 }
 
 mod errors {
@@ -116,6 +117,34 @@ mod MerkleTree {
             };
 
             current_hash == root
+        }
+
+        fn generate_merkle_proof(
+            self: @ContractState, mut index: u64, data_length: u64
+        ) -> Array<felt252> {
+            let mut proof: Array<felt252> = ArrayTrait::new();
+            let mut offset = 0;
+            let mut current_nodes_lvl_len = if data_length % 2 != 0 {
+                data_length + 1
+            } else {
+                data_length
+            };
+
+            while current_nodes_lvl_len > 1 {
+                let sibling_index = if index % 2 == 0 {
+                    offset + index + 1
+                } else {
+                    offset + index - 1
+                };
+                proof.append(self.hashes.at(sibling_index).read());
+                offset += current_nodes_lvl_len;
+                current_nodes_lvl_len /= 2;
+                index /= 2;
+                if current_nodes_lvl_len > 1 && current_nodes_lvl_len % 2 != 0 {
+                    current_nodes_lvl_len += 1;
+                };
+            };
+            proof
         }
     }
 }
