@@ -3,9 +3,9 @@ pub trait IMerkleTree<TContractState> {
     fn hash(ref self: TContractState, data: ByteArray) -> felt252;
     fn build_tree(ref self: TContractState, data: Array<ByteArray>) -> Array<felt252>;
     fn get_root(self: @TContractState) -> felt252;
-    // fn verify(
-//     self: @TContractState, proof: Array<felt252>, root: felt252, leaf: felt252, index: usize,
-// ) -> bool;
+    fn verify(
+        self: @TContractState, proof: Array<felt252>, root: felt252, leaf: felt252, index: usize,
+    ) -> bool;
 }
 
 mod errors {
@@ -39,7 +39,7 @@ mod MerkleTree {
             let mut _hashes: Array<felt252> = ArrayTrait::new();
             let mut last_element = Option::None;
 
-            if data_len > 0 && (data_len & (data_len - 1)) != 0 {
+            if data_len > 0 && (data_len % 2) != 0 {
                 last_element = Option::Some(data.at(data_len - 1).clone());
             };
 
@@ -50,7 +50,7 @@ mod MerkleTree {
             let mut current_nodes_lvl_len = data_len;
             let mut hashes_offset = 0;
 
-            // if data_len is not a power of 2, add the last element to the hashes array
+            // if data_len is uneven, add the last element to the hashes array
             match last_element {
                 Option::Some(value) => {
                     _hashes.append(self.hash(value));
@@ -73,6 +73,12 @@ mod MerkleTree {
 
                 hashes_offset += current_nodes_lvl_len;
                 current_nodes_lvl_len /= 2;
+                if current_nodes_lvl_len > 1 && current_nodes_lvl_len % 2 != 0 {
+                    // duplicate last element of hashes array if current_nodes_lvl_len is uneven
+                    let last_elem = *_hashes.at(_hashes.len() - 1);
+                    _hashes.append(last_elem);
+                    current_nodes_lvl_len += 1;
+                };
             };
 
             for hash in _hashes.span() {
@@ -82,12 +88,34 @@ mod MerkleTree {
             _hashes
         }
 
-
         fn get_root(self: @ContractState) -> felt252 {
             let merkle_tree_length = self.hashes.len();
             assert(merkle_tree_length > 0, super::errors::NOT_PRESENT);
 
             self.hashes.at(merkle_tree_length - 1).read()
+        }
+
+        fn verify(
+            self: @ContractState,
+            mut proof: Array<felt252>,
+            root: felt252,
+            leaf: felt252,
+            mut index: usize,
+        ) -> bool {
+            let mut current_hash = leaf;
+
+            while let Option::Some(proof_value) = proof.pop_front() {
+                current_hash =
+                    if index % 2 == 0 {
+                        PoseidonTrait::new().update_with((current_hash, proof_value)).finalize()
+                    } else {
+                        PoseidonTrait::new().update_with((proof_value, current_hash)).finalize()
+                    };
+
+                index /= 2;
+            };
+
+            current_hash == root
         }
     }
 }

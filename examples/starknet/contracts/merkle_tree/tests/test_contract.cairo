@@ -19,7 +19,7 @@ fn test_build_tree() {
 
     let dispatcher = IMerkleTreeDispatcher { contract_address };
 
-    let mut data: Array<ByteArray> = array!["1", "2", "3", "4", "5", "6", "7", "8",];
+    let mut data: Array<ByteArray> = array!["1", "2", "3", "4", "5", "6", "7", "8"];
 
     let hashes = dispatcher.build_tree(data);
     assert!(hashes.len() == 15);
@@ -45,7 +45,7 @@ fn test_build_tree_uneven() {
 
     let dispatcher = IMerkleTreeDispatcher { contract_address };
 
-    let mut data: Array<ByteArray> = array!["1", "2", "3", "4", "5", "6", "7",];
+    let mut data: Array<ByteArray> = array!["1", "2", "3", "4", "5", "6", "7"];
 
     let hashes = dispatcher.build_tree(data);
     assert!(hashes.len() == 15);
@@ -57,7 +57,7 @@ fn test_get_root() {
 
     let dispatcher = IMerkleTreeDispatcher { contract_address };
 
-    let mut data: Array<ByteArray> = array!["1", "2", "3", "4", "5", "6", "7", "8",];
+    let mut data: Array<ByteArray> = array!["1", "2", "3", "4", "5", "6", "7", "8"];
 
     let hashes = dispatcher.build_tree(data);
     let root = dispatcher.get_root();
@@ -73,3 +73,147 @@ fn test_get_root_raises() {
     dispatcher.get_root();
 }
 
+#[test]
+fn test_verify_positive_4() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+
+    let mut data = array!["1", "2", "3", "4"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    // to verify the 0th element exists in the tree:
+    // we need to provide merkle proof array with
+    // its sibling (1st) and the sibling of its intermediate node (hash of 2nd and 3rd)
+    assert!(
+        dispatcher.verify(array![*hashes.at(1), *hashes.at(5)], root, *hashes.at(0), 0) == true,
+    );
+}
+
+#[test]
+fn test_verify_positive_7() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    // since data is uneven, the last element is added to the tree
+    // [1, 2, 3, 4, 5, 6, 7] -> [1, 2, 3, 4, 5, 6, 7, 7]
+    let mut data = array!["1", "2", "3", "4", "5", "6", "7"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    // to verify the 3rd element exists in the tree:
+    // we need to provide merkle proof array with
+    // its sibling (2nd) and the sibling of its intermediate node (hash of 0th and 1st)
+    // and the last sibling = (hash of (4th, 5st), (6th, 7th))
+    assert!(
+        dispatcher
+            .verify(
+                array![*hashes.at(2), *hashes.at(8), *hashes.at(13)], root, *hashes.at(3), 3,
+            ) == true,
+    );
+}
+
+#[test]
+fn test_verify_positive_5() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    // since data is uneven, the last element is added to the tree
+    // [1, 2, 3, 4, 5] -> [1, 2, 3, 4, 5, 5]
+    let mut data = array!["1", "2", "3", "4", "5"];
+    // and data is even bot not a power of 2,
+    // so the last hash on first level is duplicated
+    // [((1, 2), (3, 4)), ((5, 5), (5, 5))]
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    assert!(hashes.len() == 13);
+    // to verify the 4th (last) element exists in the tree:
+    // we need to provide merkle proof array with
+    // its sibling (5th(duplicate of him)) and the sibling of its intermediate node (him and him)
+    // and the last sibling = (hash of (0th, 1st, 2nd, 3rd))
+    assert!(
+        dispatcher
+            .verify(
+                array![*hashes.at(5), *hashes.at(9), *hashes.at(10)], root, *hashes.at(4), 4,
+            ) == true,
+    );
+}
+
+#[test]
+fn test_verify_positive_6() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    let mut data = array!["1", "2", "3", "4", "5", "6"];
+    // data is even bot not a power of 2,
+    // so the last hash on first level is duplicated
+    // [((1, 2), (3, 4)), ((5, 6), (5, 6))]
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    assert!(hashes.len() == 13);
+    // to verify the 4th element exists in the tree:
+    // we need to provide merkle proof array with
+    // its sibling (5th) and the sibling of its
+    // intermediate node (hash of him (4th) and his sibling (5th))
+    // and the last sibling = (hash of (0th, 1st, 2nd, 3rd))
+    assert!(
+        dispatcher
+            .verify(
+                array![*hashes.at(5), *hashes.at(9), *hashes.at(10)], root, *hashes.at(4), 4,
+            ) == true,
+    );
+}
+
+
+#[test]
+fn test_verify_positive_8() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    let mut data = array!["1", "2", "3", "4", "5", "6", "7", "8"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    // to verify the 5th element exists in the tree:
+    // we need to provide merkle proof array with
+    // its sibling (4th) and the sibling of its intermediate node (hash of 6th and 7th)
+    // and the last sibling = (hash of (0th, 1st), (2nd, 3rd))
+    assert!(
+        dispatcher
+            .verify(
+                array![*hashes.at(4), *hashes.at(11), *hashes.at(12)], root, *hashes.at(5), 5,
+            ) == true,
+    );
+}
+
+#[test]
+fn test_verify_negative() {
+    let contract_address = deploy_contract("MerkleTree");
+    let dispatcher = IMerkleTreeDispatcher { contract_address };
+    let mut data = array!["1", "2", "3", "4", "5", "6", "7", "8"];
+    let hashes = dispatcher.build_tree(data);
+    let root = dispatcher.get_root();
+    assert!(root == *hashes.at(hashes.len() - 1));
+    // bad index
+    assert!(
+        dispatcher
+            .verify(
+                array![*hashes.at(4), *hashes.at(11), *hashes.at(12)], root, *hashes.at(5), 6,
+            ) == false,
+    );
+    // bad proof
+    assert!(
+        dispatcher
+            .verify(
+                array![*hashes.at(4), *hashes.at(11), *hashes.at(13)], root, *hashes.at(5), 5,
+            ) == false,
+    );
+    // bad root
+    assert!(
+        dispatcher
+            .verify(
+                array![*hashes.at(4), *hashes.at(11), *hashes.at(12)],
+                *hashes.at(0),
+                *hashes.at(5),
+                5,
+            ) == false,
+    );
+}
