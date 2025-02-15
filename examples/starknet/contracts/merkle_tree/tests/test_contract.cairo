@@ -1,4 +1,6 @@
 use starknet::ContractAddress;
+use core::poseidon::PoseidonTrait;
+use core::hash::{HashStateTrait, HashStateExTrait};
 
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
@@ -21,6 +23,20 @@ fn test_build_tree() {
 
     let hashes = dispatcher.build_tree(data);
     assert!(hashes.len() == 15);
+    let hash_1 = dispatcher.hash("1");
+    assert!(*hashes.at(0) == hash_1);
+
+    let hash_1_2 = PoseidonTrait::new().update_with((hash_1, *hashes.at(1))).finalize();
+    assert!(*hashes.at(8) == hash_1_2);
+
+    let hash_3_4 = PoseidonTrait::new().update_with((*hashes.at(2), *hashes.at(3))).finalize();
+    let hash_1_2_3_4 = PoseidonTrait::new().update_with((hash_1_2, hash_3_4)).finalize();
+    assert!(*hashes.at(12) == hash_1_2_3_4);
+
+    let hash_root = PoseidonTrait::new()
+        .update_with((hash_1_2_3_4, *hashes.at(hashes.len() - 2)))
+        .finalize();
+    assert!(*hashes.at(hashes.len() - 1) == hash_root);
 }
 
 #[test]
