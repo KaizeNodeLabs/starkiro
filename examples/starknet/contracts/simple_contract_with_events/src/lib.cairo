@@ -1,1 +1,1 @@
-mod simple_contract_with_events;
+pub mod simple_contract_with_events;
