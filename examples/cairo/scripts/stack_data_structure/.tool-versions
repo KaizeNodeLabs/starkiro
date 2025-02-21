@@ -1,0 +1,7 @@
+[dev-dependencies]
+cairo_test = "2.9.2"
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.34.0" }
+
+scarb 2.9.2 (e9a2b8716 2024-08-01)
+cairo: 2.9.2 (https://crates.io/crates/cairo-lang-compiler/2.9.2)
+sierra: 1.6.0

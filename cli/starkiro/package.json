@@ -1,0 +1,41 @@
+{
+	"name": "starkiro",
+	"description": "Starknet DevSuite Install CLI | For help include --help in the command",
+	"version": "0.0.1",
+	"license": "MIT",
+	"type": "module",
+	"bin": {
+		"starkiro": "index.js"
+	},
+	"author": {
+		"name": "danielcdz",
+		"email": "calde0601@gmail.com",
+		"url": "https://github.com/danielcdz"
+	},
+	"keywords": [
+		"starkiro",
+		"danielcdz"
+	],
+	"files": [
+		"index.js",
+		"utils"
+	],
+	"scripts": {
+		"format": "prettier --write \"./**/*.{js,json}\""
+	},
+	"dependencies": {
+		"@clack/prompts": "^0.10.0",
+		"chalk": "^5.4.1",
+		"cli-alerts": "^2.0.0",
+		"cli-handle-error": "^4.4.1",
+		"cli-handle-unhandled": "^1.1.2",
+		"cli-meow-help": "^4.0.0",
+		"cli-welcome": "^3.0.1",
+		"get-package-json-file": "^2.0.0",
+		"meow": "^13.2.0",
+		"ora": "^8.2.0"
+	},
+	"devDependencies": {
+		"prettier": "^3.4.2"
+	}
+}

@@ -1,0 +1,57 @@
+name: Test Starkiro Contracts
+
+on:
+  push:
+    branches: ["fix/snforge-workflow"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 
+
+      - name: Cache Scarb Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/scarb
+          key: scarb-${{ runner.os }}-${{ hashFiles('**/Scarb.lock') }}
+          restore-keys: |
+            scarb-${{ runner.os }}-
+
+      - name: Setup Scarb
+        uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: "2.9.2"
+
+      - name: Setup Starknet Foundry
+        uses: foundry-rs/setup-snfoundry@v3
+
+      - name: Verify Scarb & Snfoundry
+        run: |
+          if ! command -v scarb &> /dev/null; then
+            echo "❌ Scarb is not installed!"
+            exit 1
+          fi
+          if ! command -v snforge &> /dev/null; then
+            echo "❌ Starknet Foundry (snforge) is not installed!"
+            exit 1
+          fi
+
+      - name: Run Tests
+        run: |
+          chmod +x ./test_contracts.sh
+          ./test_contracts.sh
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: examples/starknet/contracts/**/target/
+          retention-days: 3

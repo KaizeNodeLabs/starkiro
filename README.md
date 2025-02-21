@@ -57,10 +57,10 @@ scarb --version
 
 ### 2. 📂 **Navigate to the Scripts Directory**
 
-First, navigate to the general cairo/scripts/ directory:
+First, navigate to the general examples/cairo/scripts/ directory:
 
 ```bash
-cd cairo/scripts/
+cd examples/cairo/scripts/
 ```
 
 Then, navigate to the specific script's directory you want to run. For example, if the script you want to execute is in a folder named example_script, navigate into that directory:
@@ -84,7 +84,6 @@ To execute the main function of the script, use:
 ```bash
 scarb cairo-run
 ```
-
 
 ## ⚙️ Steps to build and and test contracts
 
@@ -226,7 +225,13 @@ This will install the correct versions of the tools specified in the `.tool-vers
 - Always check the `.tool-versions` file in the script or contract directory before building or running.
 - Use `asdf install` to ensure all required dependencies are correctly installed.
 
+## 🚀 Deploying Smart Contracts
 
+You can deploy your smart contracts using the IDE or on Sepolia Testnet using sncast
+
+- For deployment using IDE, follow the steps here [Deployment of Contracts using IDE](https://github.com/KaizeNodeLabs/starkiro/docs/CONTRACT_DEPLOYMENT.md)
+
+- Also for deployment of contracts using sncast, follow the steps here  [Deployment of Contracts using sncast](https://github.com/KaizeNodeLabs/starkiro/docs/CONTRACT_DEPLOYMENT.md)
 
 
 ## Give us a star! ⭐

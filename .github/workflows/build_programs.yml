@@ -1,0 +1,33 @@
+name: Build Starkiro Contracts and Scripts
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  compile_and_verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure upstream repository
+        run: |
+          git remote add upstream https://github.com/KaizeNodeLabs/starkiro
+          git fetch upstream main
+
+      - name: Install scarb
+        uses: software-mansion/setup-scarb@v1
+
+      - name: Install snforge
+        uses: foundry-rs/setup-snfoundry@v3
+
+      - name: Run build script
+        run: |
+          chmod +x .github/scripts/build_programs.sh
+          .github/scripts/build_programs.sh

@@ -1,0 +1,17 @@
+[package]
+name = "flipflop"
+version = "0.1.0"
+edition = "2023_11"
+
+[dependencies]
+starknet = "2.9.2"
+
+[dev-dependencies]
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.34.0" }
+assert_macros = "2.9.2"
+
+[[target.starknet-contract]]
+sierra = true
+
+[scripts]
+test = "snforge test"
