@@ -85,7 +85,7 @@ fn test_finalize_successful_campaign() {
     // Create a campaign
     cheat_caller_address(contract, creator, CheatSpan::TargetCalls(1));
     let campaign_id = 1;
-    let funding_goal = 1000_u64;
+    let funding_goal = 1_u64;
     let current_time = 1000_u64;
     let deadline = current_time + 86400_u64;
 
