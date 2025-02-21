@@ -1,10 +1,9 @@
 use snforge_std::{
-    declare, ContractClassTrait, DeclareResultTrait, spy_events,
-    EventSpyAssertionsTrait, // Add for assertions on the EventSpy
+    declare, ContractClassTrait, DeclareResultTrait, spy_events, EventSpyAssertionsTrait,
 };
 
-use testing_events::contract::{
-    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait
+use simple_contract_with_events::simple_contract_with_events::{
+    SpyEventsChecker, ISpyEventsCheckerDispatcher, ISpyEventsCheckerDispatcherTrait,
 };
 
 #[test]
@@ -13,19 +12,19 @@ fn test_simple_assertions() {
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-    let mut spy = spy_events(); // Ad. 1
+    let mut spy = spy_events();
 
     dispatcher.emit_one_event(123);
 
     spy
         .assert_emitted(
-            @array![ // Ad. 2
+            @array![
                 (
                     contract_address,
                     SpyEventsChecker::Event::FirstEvent(
-                        SpyEventsChecker::FirstEvent { some_data: 123 }
-                    )
-                )
-            ]
+                        SpyEventsChecker::FirstEvent { some_data: 123 },
+                    ),
+                ),
+            ],
         );
 }
