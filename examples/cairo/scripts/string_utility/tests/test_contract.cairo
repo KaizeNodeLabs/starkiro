@@ -127,3 +127,130 @@ fn test_multiple_string_manipulation() {
     assert(text.len() == 11, 'final length incorrect');
     assert(text.data == "Hello World", 'final content incorrect');
 }
+
+#[test]
+fn test_to_lowercase() {
+    // Test basic uppercase to lowercase
+    let string1 = StringTrait::new("HELLO");
+    let result1 = string1.to_lowercase();
+    assert(result1.data == "hello", 'basic lowercase failed');
+
+    // Test mixed case
+    let string2 = StringTrait::new("HeLLo WoRLD");
+    let result2 = string2.to_lowercase();
+    assert(result2.data == "hello world", 'mixed case failed');
+
+    // Test already lowercase
+    let string3 = StringTrait::new("hello");
+    let result3 = string3.to_lowercase();
+    assert(result3.data == "hello", 'already lowercase failed');
+
+    // Test with numbers and symbols
+    let string4 = StringTrait::new("HELLO123!@#");
+    let result4 = string4.to_lowercase();
+    assert(result4.data == "hello123!@#", 'special chars failed');
+
+    // Test empty string
+    let empty = StringTrait::new("");
+    let result5 = empty.to_lowercase();
+    assert(result5.data == "", 'empty string failed');
+}
+
+#[test]
+fn test_to_uppercase() {
+    // Test basic lowercase to uppercase
+    let string1 = StringTrait::new("hello");
+    let result1 = string1.to_uppercase();
+    assert(result1.data == "HELLO", 'basic uppercase failed');
+
+    // Test mixed case
+    let string2 = StringTrait::new("HeLLo WoRLD");
+    let result2 = string2.to_uppercase();
+    assert(result2.data == "HELLO WORLD", 'mixed case failed');
+
+    // Test already uppercase
+    let string3 = StringTrait::new("HELLO");
+    let result3 = string3.to_uppercase();
+    assert(result3.data == "HELLO", 'already uppercase failed');
+
+    // Test with numbers and symbols
+    let string4 = StringTrait::new("hello123!@#");
+    let result4 = string4.to_uppercase();
+    assert(result4.data == "HELLO123!@#", 'special chars failed');
+
+    // Test empty string
+    let empty = StringTrait::new("");
+    let result5 = empty.to_uppercase();
+    assert(result5.data == "", 'empty string failed');
+}
+
+#[test]
+fn test_trim() {
+    // Test basic space trimming
+    let string1 = StringTrait::new("  hello  ");
+    let result1 = string1.trim();
+    assert(result1.data == "hello", 'basic trim failed');
+
+    // Test with tabs and newlines
+    let string2 = StringTrait::new("\t\n hello world \r\n");
+    let result2 = string2.trim();
+    assert(result2.data == "hello world", 'mixed whitespace failed');
+
+    // Test with no trim needed
+    let string3 = StringTrait::new("hello");
+    let result3 = string3.trim();
+    assert(result3.data == "hello", 'no trim needed failed');
+
+    // Test with internal spaces
+    let string4 = StringTrait::new("   hello   world   ");
+    let result4 = string4.trim();
+    assert(result4.data == "hello   world", 'internal spaces failed');
+
+    // Test all whitespace string
+    let string5 = StringTrait::new("   \t\n\r   ");
+    let result5 = string5.trim();
+    assert(result5.data == "", 'all whitespace failed');
+
+    // Test empty string
+    let empty = StringTrait::new("");
+    let result6 = empty.trim();
+    assert(result6.data == "", 'empty string failed');
+}
+
+#[test]
+fn test_substring() {
+    let test_string = StringTrait::new("Hello World");
+
+    // Test basic substring
+    let result1 = test_string.substring(6, 11);
+    assert(result1.data == "World", 'basic substring failed');
+
+    // Test from start
+    let result2 = test_string.substring(0, 5);
+    assert(result2.data == "Hello", 'start substring failed');
+
+    // Test single character
+    let result3 = test_string.substring(0, 1);
+    assert(result3.data == "H", 'single char failed');
+
+    // Test invalid start index
+    let result4 = test_string.substring(12, 15);
+    assert(result4.data == "", 'invalid start failed');
+
+    // Test invalid end index
+    let result5 = test_string.substring(0, 15);
+    assert(result5.data == "", 'invalid end failed');
+
+    // Test start >= end
+    let result6 = test_string.substring(5, 2);
+    assert(result6.data == "", 'invalid range failed');
+
+    // Test empty string
+    let empty = StringTrait::new("");
+    let result7 = empty.substring(0, 1);
+    assert(result7.data == "", 'empty string failed');
+
+    // Test middle substring
+    let result8 = test_string.substring(3, 8);
+    assert(result8.data == "lo Wo", 'middle substring failed');
+}
