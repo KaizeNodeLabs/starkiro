@@ -45,8 +45,8 @@ jobs:
 
       - name: Run Tests
         run: |
-          chmod +x ./test_contracts.sh
-          ./test_contracts.sh
+          chmod +x .github/scripts/test_contracts.sh
+          .github/scripts/test_contracts.sh
 
       - name: Upload test logs
         if: always()
