@@ -1,4 +1,4 @@
-name: Test Starkiro Contracts
+name: Test Starkiro Contracts and Scripts
 
 on:
   push:
@@ -45,13 +45,15 @@ jobs:
 
       - name: Run Tests
         run: |
-          chmod +x ./test_contracts.sh
-          ./test_contracts.sh
+          chmod +x .github/scripts/run_snforge_tests.sh
+          .github/scripts/run_snforge_tests.sh
 
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
-          path: examples/starknet/contracts/**/target/
+          path: |
+            examples/starknet/contracts/**/target/
+            examples/starknet/scripts/**/target/
           retention-days: 3
