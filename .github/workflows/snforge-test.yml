@@ -47,6 +47,8 @@ jobs:
         run: |
           chmod +x .github/scripts/run_snforge_tests.sh
           .github/scripts/run_snforge_tests.sh
+          chmod +x .github/scripts/test_contracts.sh
+          .github/scripts/test_contracts.sh
 
       - name: Upload test logs
         if: always()
