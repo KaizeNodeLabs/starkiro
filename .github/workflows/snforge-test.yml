@@ -59,3 +59,4 @@ jobs:
             examples/starknet/contracts/**/target/
             examples/starknet/scripts/**/target/
           retention-days: 3
+          
