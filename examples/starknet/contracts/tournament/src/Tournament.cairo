@@ -1,6 +1,7 @@
 use starknet::ContractAddress;
 
-#[derive(Copy, Drop, Serde, starknet::Store)]
+#[derive(Copy, Drop, Serde, starknet::Store, PartialEq)]
+#[allow(starknet::store_no_default_variant)]
 enum TournamentState {
     NotStarted,
     Registration,
@@ -54,7 +55,9 @@ trait ITournament<TContractState> {
 
 #[starknet::contract]
 mod Tournament {
-    use super::{ITournament, TournamentState, TournamentInfo, PlayerInfo};
+    use starknet::storage::StorageMapReadAccess;
+    use starknet::storage::StorageMapWriteAccess;
+    use super::{TournamentState, TournamentInfo, PlayerInfo};
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use core::array::ArrayTrait;
     use core::traits::Into;
@@ -121,7 +124,7 @@ mod Tournament {
                     state: TournamentState::NotStarted,
                     registered_players_count: 0,
                     winner: starknet::contract_address_const::<0>(),
-                }
+                },
             );
     }
 
@@ -158,8 +161,8 @@ mod Tournament {
             self
                 .emit(
                     Event::TournamentCreated(
-                        TournamentCreated { name, max_players, entry_fee, start_time, end_time, }
-                    )
+                        TournamentCreated { name, max_players, entry_fee, start_time, end_time },
+                    ),
                 );
         }
 
@@ -185,9 +188,9 @@ mod Tournament {
             };
 
             // Update state
-            self.players.entry(caller).write(player_info);
+            self.players.write(caller, player_info);
             let new_count = tournament.registered_players_count + 1;
-            self.registered_players.entry(new_count).write(caller);
+            self.registered_players.write(new_count, caller);
 
             self
                 .tournament_info
@@ -195,15 +198,15 @@ mod Tournament {
                     TournamentInfo {
                         registered_players_count: new_count,
                         prize_pool: tournament.prize_pool + tournament.entry_fee,
-                        ..tournament
-                    }
+                        ..tournament,
+                    },
                 );
 
             self
                 .emit(
                     Event::PlayerRegistered(
-                        PlayerRegistered { player: caller, registration_time: current_time, }
-                    )
+                        PlayerRegistered { player: caller, registration_time: current_time },
+                    ),
                 );
         }
 
@@ -212,7 +215,7 @@ mod Tournament {
             assert(caller == self.owner.read(), 'Only owner can start');
 
             let tournament = self.tournament_info.read();
-            // assert(tournament.state == TournamentState::Registration, 'Invalid state');
+            assert(tournament.state == TournamentState::Registration, 'Invalid state');
             assert(tournament.registered_players_count >= 2, 'Not enough players');
 
             let current_time = get_block_timestamp();
@@ -228,8 +231,8 @@ mod Tournament {
                         TournamentStarted {
                             start_time: current_time,
                             registered_players: tournament.registered_players_count,
-                        }
-                    )
+                        },
+                    ),
                 );
         }
 
@@ -252,8 +255,8 @@ mod Tournament {
                     Event::TournamentEnded(
                         TournamentEnded {
                             end_time: current_time, winner, prize_pool: tournament.prize_pool,
-                        }
-                    )
+                        },
+                    ),
                 );
         }
 
@@ -267,7 +270,7 @@ mod Tournament {
         }
 
         fn get_player_info(self: @ContractState, player: ContractAddress) -> PlayerInfo {
-            self.players.entry(player).read()
+            self.players.read(player)
         }
 
         fn get_registered_players(self: @ContractState) -> Array<ContractAddress> {
@@ -279,7 +282,7 @@ mod Tournament {
                 if i > tournament.registered_players_count {
                     break;
                 }
-                players.append(self.registered_players.entry(i).read());
+                players.append(self.registered_players.read(i));
                 i += 1;
             };
 
@@ -290,7 +293,7 @@ mod Tournament {
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
         fn is_player_registered(self: @ContractState, player: ContractAddress) -> bool {
-            let player_info = self.players.entry(player).read();
+            let player_info = self.players.read(player);
             player_info.registration_time != 0
         }
     }
