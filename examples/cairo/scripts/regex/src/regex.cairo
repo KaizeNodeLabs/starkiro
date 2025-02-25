@@ -1,15 +1,7 @@
 // Basic Regex Utility Implementation for Cairo
 // Implements a simplified regex engine with support for essential pattern matching
 
-#[derive(Drop, Copy, PartialEq)]
-pub enum Token {
-    Literal: felt252,
-    Wildcard,
-    CharClass: (felt252, felt252), // Start and end characters
-    ZeroOrOne, // ?
-    OneOrMore, // +
-    ZeroOrMore // *
-}
+use regex::token::{Token};
 
 #[derive(Drop)]
 pub struct Regex {
