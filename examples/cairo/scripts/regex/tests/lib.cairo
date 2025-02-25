@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use regex::fib;
+    use regex::regex::{RegexTrait, Regex, Token};
 
     #[test]
-    fn it_works() {
-        assert(fib(16) == 987, 'it works!');
+    fn test() {
+        let regex = RegexTrait::new("?");
+
+        assert(*regex.pattern.at(0) == Token::ZeroOrOne, 'wrong token');
     }
 }
