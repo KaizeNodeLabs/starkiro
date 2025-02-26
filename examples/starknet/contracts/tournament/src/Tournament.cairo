@@ -1,8 +1,7 @@
 use starknet::ContractAddress;
 
 #[derive(Copy, Drop, Serde, starknet::Store, PartialEq)]
-#[allow(starknet::store_no_default_variant)]
-enum TournamentState {
+pub enum TournamentState {
     NotStarted,
     Registration,
     InProgress,
@@ -10,20 +9,20 @@ enum TournamentState {
 }
 
 #[derive(Copy, Drop, Serde, starknet::Store)]
-struct TournamentInfo {
-    name: felt252,
-    max_players: u32,
-    entry_fee: u256,
-    prize_pool: u256,
-    start_time: u64,
-    end_time: u64,
-    state: TournamentState,
-    registered_players_count: u32,
-    winner: ContractAddress,
+pub struct TournamentInfo {
+    pub name: felt252,
+    pub max_players: u32,
+    pub entry_fee: u256,
+    pub prize_pool: u256,
+    pub start_time: u64,
+    pub end_time: u64,
+    pub state: TournamentState,
+    pub registered_players_count: u32,
+    pub winner: ContractAddress,
 }
 
 #[derive(Copy, Drop, Serde, starknet::Store)]
-struct PlayerInfo {
+pub struct PlayerInfo {
     address: ContractAddress,
     registration_time: u64,
     score: u32,
@@ -32,7 +31,7 @@ struct PlayerInfo {
 }
 
 #[starknet::interface]
-trait ITournament<TContractState> {
+pub trait ITournament<TContractState> {
     // Tournament management
     fn create_tournament(
         ref self: TContractState,
@@ -54,7 +53,7 @@ trait ITournament<TContractState> {
 }
 
 #[starknet::contract]
-mod Tournament {
+pub mod Tournament {
     use starknet::storage::StorageMapReadAccess;
     use starknet::storage::StorageMapWriteAccess;
     use super::{TournamentState, TournamentInfo, PlayerInfo};
@@ -73,7 +72,7 @@ mod Tournament {
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         TournamentCreated: TournamentCreated,
         PlayerRegistered: PlayerRegistered,
         TournamentStarted: TournamentStarted,
@@ -81,12 +80,12 @@ mod Tournament {
     }
 
     #[derive(Drop, starknet::Event)]
-    struct TournamentCreated {
-        name: felt252,
-        max_players: u32,
-        entry_fee: u256,
-        start_time: u64,
-        end_time: u64,
+    pub struct TournamentCreated {
+        pub name: felt252,
+        pub max_players: u32,
+        pub entry_fee: u256,
+        pub start_time: u64,
+        pub end_time: u64,
     }
 
     #[derive(Drop, starknet::Event)]
