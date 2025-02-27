@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod replace_tests {
-    use regex::regex::{Regex, RegexTrait};
+    use regex::regex::{RegexTrait};
     use regex::tests::test_utils::assert_equal_bytearrays;
 
 
@@ -144,8 +144,6 @@ mod replace_tests {
 
     #[test]
     fn test_replace_overlapping() {
-        // Test replacing potentially overlapping patterns
-        // Most regex engines find non-overlapping matches
         let pattern_str: ByteArray = "aba";
         let mut regex = RegexTrait::new(pattern_str);
         let replacement: ByteArray = "X";
@@ -153,7 +151,6 @@ mod replace_tests {
         let input: ByteArray = "ababababa";
         let result = regex.replace(input.clone(), replacement.clone());
 
-        // For non-overlapping matches, we expect "XbXbX" or "XXX" depending on implementation
         assert!(result.len() < input.clone().len(), "Replacement should be shorter than original");
     }
 

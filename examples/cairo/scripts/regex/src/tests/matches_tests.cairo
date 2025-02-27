@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod matches_tests {
-    use regex::token::{Token};
-    use regex::regex::{Regex, RegexTrait};
+    use regex::regex::{RegexTrait};
 
     #[test]
     fn test_literal_exact_match() {

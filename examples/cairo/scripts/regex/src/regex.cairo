@@ -1,19 +1,58 @@
-// Basic Regex Utility Implementation
-// Implements a simplified regex engine with support for essential pattern matching
+//! Basic Regex Utility for Cairo
+//! Implementation of a simplified regex engine supporting essential pattern matching features.
 
 use regex::token::{Token};
 
+/// A regular expression pattern compiled into a sequence of tokens
 #[derive(Drop)]
 pub struct Regex {
     pub pattern: Array<Token>,
 }
 
-// Initialization and pattern parsing logic
+/// Core regex operations trait
 pub trait RegexTrait {
+    /// Create a new Regex instance from a pattern string
+    ///
+    /// # Arguments
+    /// * `pattern_str` - A string representing the regex pattern
     fn new(pattern_str: ByteArray) -> Regex;
+
+    /// Check if the entire text matches the pattern
+    ///
+    /// # Arguments
+    /// * `text` - The input text to match against the pattern
+    ///
+    /// # Returns
+    /// `true` if the entire text matches the pattern, `false` otherwise
     fn matches(ref self: Regex, text: ByteArray) -> bool;
+
+    /// Find the first occurrence of the pattern in the text
+    ///
+    /// # Arguments
+    /// * `text` - The input text to search for the pattern
+    ///
+    /// # Returns
+    /// `Option<(usize, usize)>` - Start and end positions of the first match, or None if no match
+    /// found
     fn find(ref self: Regex, text: ByteArray) -> Option<(usize, usize)>;
+
+    /// Find all occurrences of the pattern in the text
+    ///
+    /// # Arguments
+    /// * `text` - The input text to search for the pattern
+    ///
+    /// # Returns
+    /// A span of tuples containing start and end positions of all matches
     fn find_all(ref self: Regex, text: ByteArray) -> Span<(usize, usize)>;
+
+    /// Replace all occurrences of the pattern with the replacement text
+    ///
+    /// # Arguments
+    /// * `text` - The input text to perform replacements on
+    /// * `replacement` - The text to insert in place of matches
+    ///
+    /// # Returns
+    /// A new text with all matches replaced
     fn replace(ref self: Regex, text: ByteArray, replacement: ByteArray) -> ByteArray;
 }
 
@@ -77,10 +116,7 @@ impl RegexImpl of RegexTrait {
         Regex { pattern }
     }
 
-
-    // Check if the entire text matches the pattern
     fn matches(ref self: Regex, text: ByteArray) -> bool {
-        // Implementation to check if text fully matches the pattern
         let result = self._match(text.clone(), 0, 0);
         let res = match result {
             Option::Some((end_pos, _)) => { end_pos == text.clone().len() },
@@ -90,7 +126,6 @@ impl RegexImpl of RegexTrait {
         res
     }
 
-    // Find first occurrence of pattern in text
     fn find(ref self: Regex, text: ByteArray) -> Option<(usize, usize)> {
         let mut start_pos = 0;
         let text_len = text.clone().len();
@@ -112,7 +147,6 @@ impl RegexImpl of RegexTrait {
         result
     }
 
-    // Find all occurrences of pattern in text
     fn find_all(ref self: Regex, text: ByteArray) -> Span<(usize, usize)> {
         let mut matches = ArrayTrait::new();
         let mut start_pos = 0;
@@ -139,7 +173,6 @@ impl RegexImpl of RegexTrait {
         matches.span()
     }
 
-    // Replace all occurrences of pattern with replacement text
     fn replace(ref self: Regex, text: ByteArray, replacement: ByteArray) -> ByteArray {
         let mut result: ByteArray = "";
         let mut last_end = 0;
@@ -182,13 +215,21 @@ impl RegexImpl of RegexTrait {
     }
 }
 
-// Internal helper trait for regex matching
+/// Internal helper trait for regex matching
 trait RegexHelperTrait {
+    /// Match a pattern starting from a specific position
+    ///
+    /// # Arguments
+    /// * `text` - The input text to match against
+    /// * `text_pos` - The position in the text to start matching
+    /// * `pattern_pos` - The position in the pattern to start matching
+    ///
+    /// # Returns
+    /// `Option<(usize, usize)>` - End position in text and pattern if matched, or None
     fn _match(
         ref self: Regex, text: ByteArray, text_pos: usize, pattern_pos: usize,
     ) -> Option<(usize, usize)>;
 }
-
 
 impl RegexHelperImpl of RegexHelperTrait {
     fn _match(
@@ -202,10 +243,9 @@ impl RegexHelperImpl of RegexHelperTrait {
         // Get current token
         let current_token = *self.pattern.at(pattern_pos);
 
-        // Check if we're at end of text
+        // Check if at end of text
         let at_end_of_text = text_pos >= text.clone().len();
 
-        // Handle different token types
         match current_token {
             Token::Literal(c) => {
                 // Can't match literal at end of text
@@ -242,7 +282,6 @@ impl RegexHelperImpl of RegexHelperTrait {
                 }
 
                 let current_char: u8 = text.at(text_pos).unwrap().try_into().unwrap();
-                // Simplify range check
                 if _is_in_range(current_char, start.try_into().unwrap(), end.try_into().unwrap()) {
                     return self._match(text.clone(), text_pos + 1, pattern_pos + 1);
                 } else {
@@ -292,9 +331,7 @@ impl RegexHelperImpl of RegexHelperTrait {
                         // Otherwise, move to next token
                         return self._match(text.clone(), text_pos + 1, pattern_pos + 1);
                     } else {
-                        // The current character doesn't match what we're trying to repeat
-                        // But we might have already satisfied the "one or more" requirement
-                        // So we should try continuing with the next token
+                        // Try continuing with the next token
                         return self._match(text.clone(), text_pos, pattern_pos + 1);
                     }
                 }
@@ -324,7 +361,14 @@ impl RegexHelperImpl of RegexHelperTrait {
     }
 }
 
-// Check if a character matches a token
+/// Check if a character matches a token
+///
+/// # Arguments
+/// * `token` - The token to match against
+/// * `char` - The character to check
+///
+/// # Returns
+/// `true` if the character matches the token, `false` otherwise
 fn _match_token(token: Token, char: felt252) -> bool {
     match token {
         Token::Literal(c) => c == char,
@@ -338,12 +382,27 @@ fn _match_token(token: Token, char: felt252) -> bool {
     }
 }
 
-// Check if a character is within a range
+/// Check if a character is within a range
+///
+/// # Arguments
+/// * `char` - The character to check
+/// * `start` - The start of the range (inclusive)
+/// * `end` - The end of the range (inclusive)
+///
+/// # Returns
+/// `true` if the character is within the range, `false` otherwise
 fn _is_in_range(char: u8, start: u8, end: u8) -> bool {
     char >= start && char <= end
 }
 
-// Check if the next token is a quantifier
+/// Check if the next token is a quantifier that allows zero matches
+///
+/// # Arguments
+/// * `pattern` - The token pattern array
+/// * `current_pos` - The current position in the pattern
+///
+/// # Returns
+/// `true` if the next token is a zero-match quantifier, `false` otherwise
 fn is_next_token_zero_quantifier(pattern: @Array<Token>, current_pos: usize) -> bool {
     // Check if there is a next token
     if current_pos + 1 >= pattern.len() {
@@ -352,12 +411,11 @@ fn is_next_token_zero_quantifier(pattern: @Array<Token>, current_pos: usize) -> 
 
     // Get the next token
     let next_token = *pattern.at(current_pos + 1);
-    let next_token_felt: felt252 = next_token.clone().into();
 
     // Check if it's a quantifier that allows zero matches
     match next_token {
         Token::ZeroOrOne => true,
         Token::ZeroOrMore => true,
-        _ => false // Note: OneOrMore is NOT included here
+        _ => false // OneOrMore requires at least one match
     }
 }

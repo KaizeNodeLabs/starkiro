@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod find_tests {
-    use regex::token::{Token};
-    use regex::regex::{Regex, RegexTrait};
+    use regex::regex::{RegexTrait};
 
     #[test]
     fn test_find_literal() {
@@ -57,8 +56,6 @@ mod find_tests {
         let input2: ByteArray = "hello and hallo";
         let result2 = regex.find(input2.into());
         assert!(result2.is_some(), "Should find a match");
-        // Note: This depends on your find implementation - whether it finds
-    // "hello" first or "hallo" first. Adjust expected values accordingly.
     }
 
     #[test]

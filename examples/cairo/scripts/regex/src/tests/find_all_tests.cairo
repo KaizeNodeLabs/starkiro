@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod find_all_tests {
-    use regex::token::{Token};
-    use regex::regex::{Regex, RegexTrait};
+    use regex::regex::{RegexTrait};
 
     #[test]
     fn test_find_all_literal() {
@@ -228,14 +227,14 @@ mod find_all_tests {
         assert!(results.len() == 2, "Should find both 'color' and 'colour'");
 
         // Check matches
-        let (start1, end1) = *results.at(0);
+        let (start1, _) = *results.at(0);
         assert!(
             (input.clone().at(start1).unwrap() == 'c'
                 && input.clone().at(start1 + 1).unwrap() == 'o'),
             "First match should be 'color' or 'colour'",
         );
 
-        let (start2, end2) = *results.at(1);
+        let (start2, _) = *results.at(1);
         assert!(
             (input.clone().at(start2).unwrap() == 'c'
                 && input.clone().at(start2 + 1).unwrap() == 'o'),

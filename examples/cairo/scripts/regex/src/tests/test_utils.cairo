@@ -1,5 +1,4 @@
 use regex::token::{Token};
-use regex::regex::{Regex, RegexTrait};
 
 // Helper function to compare tokens for testing
 pub fn tokens_are_equal(actual: Array<Token>, expected: Array<Token>) -> bool {

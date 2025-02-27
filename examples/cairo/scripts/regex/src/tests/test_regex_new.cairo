@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod test_regex_new {
     use regex::token::{Token};
-    use regex::regex::{Regex, RegexTrait};
+    use regex::regex::{RegexTrait};
     use regex::tests::test_utils::tokens_are_equal;
 
     #[test]
