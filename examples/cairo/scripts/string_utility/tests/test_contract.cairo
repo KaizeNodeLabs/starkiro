@@ -1,4 +1,5 @@
 use string_utility::{StringTrait};
+use core::byte_array::ByteArray;
 
 #[test]
 fn test_new() {
@@ -253,4 +254,82 @@ fn test_substring() {
     // Test middle substring
     let result8 = test_string.substring(3, 8);
     assert(result8.data == "lo Wo", 'middle substring failed');
+}
+
+#[test]
+fn test_generic_replace() {
+    let sentence = StringTrait::new("This is an old banana.");
+
+    // Test with both String arguments
+    let target = StringTrait::new("old");
+    let replacement = StringTrait::new("amazing");
+    let result1 = sentence.replace(target, replacement);
+    assert(result1.data == "This is an amazing banana.", 'str-str replace failed');
+
+    // Test with ByteArray and String
+    let target: ByteArray = "old";
+    let replacement = StringTrait::new("amazing");
+    let result2 = sentence.replace(target, replacement);
+    assert(result2.data == "This is an amazing banana.", 'bytes-str replace failed');
+
+    // Test with String and ByteArray
+    let target = StringTrait::new("old");
+    let replacement: ByteArray = "amazing";
+    let result3 = sentence.replace(target, replacement);
+    assert(result3.data == "This is an amazing banana.", 'str-bytes replace failed');
+
+    // Test with both ByteArray arguments
+    let target: ByteArray = "old";
+    let replacement: ByteArray = "amazing";
+    let result4 = sentence.replace(target, replacement);
+    assert(result4.data == "This is an amazing banana.", 'bytes-bytes replace failed');
+}
+
+#[test]
+fn test_generic_contains() {
+    let sentence = StringTrait::new("This is an old banana.");
+
+    // Test with String pattern
+    let pattern = StringTrait::new("old");
+    assert(sentence.contains(pattern), 'str contains failed');
+
+    // Test with ByteArray pattern
+    let pattern: ByteArray = "old";
+    assert(sentence.contains(pattern), 'bytes contains failed');
+
+    // Test non-matching String pattern
+    let non_match = StringTrait::new("new");
+    assert(!sentence.contains(non_match), 'str non-match failed');
+
+    // Test non-matching ByteArray pattern
+    let non_match: ByteArray = "new";
+    assert(!sentence.contains(non_match), 'bytes non-match failed');
+}
+
+#[test]
+fn test_generic_edge_cases() {
+    let sentence = StringTrait::new("Hello World");
+    let empty_str = StringTrait::new("");
+    let empty: ByteArray = "";
+
+    // Empty string and pattern combination
+    assert(empty_str.contains(empty), 'empty-empty failed');
+
+    // Replace with empty string/pattern
+    let empty_str = StringTrait::new("");
+    let empty: ByteArray = "";
+    let result1 = sentence.replace(empty_str, empty);
+    assert(result1.data == sentence.data, 'empty replace failed');
+
+    // Replace with longer/shorter replacements
+    let target: ByteArray = "o";
+    let replacement: ByteArray = "oo";
+    let result2 = sentence.replace(target, replacement);
+    assert(result2.data == "Helloo Woorld", 'longer replace failed');
+
+    // Case sensitivity
+    let word: ByteArray = "hello";
+    let word_str = StringTrait::new("hello");
+    assert(!sentence.contains(word), 'case sensitivity bytes failed');
+    assert(!sentence.contains(word_str), 'case sensitivity str failed');
 }

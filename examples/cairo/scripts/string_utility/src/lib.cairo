@@ -25,8 +25,48 @@ pub trait StringTrait {
     fn trim(self: @String) -> String;
     /// Get a portion of the string between start (inclusive) and end (exclusive) indices
     fn substring(self: @String, start: usize, end: usize) -> String;
-    
+    /// Replace all occurrences of target with replacement
+    /// Generic types T and U must implement StringCompatible
+    fn replace<T, +StringCompatible<T>, +Drop<T>, U, +StringCompatible<U>, +Drop<U>>(
+        self: @String, target: T, replacement: U,
+    ) -> String;
+    /// Check if string contains a pattern
+    /// Generic type T must implement StringCompatible
+    fn contains<T, +StringCompatible<T>, +Drop<T>>(self: @String, pattern: T) -> bool;
 }
+
+/// Trait for types that can be used in string operations
+pub trait StringCompatible<T> {
+    fn to_bytes(self: T) -> ByteArray;
+}
+
+// Implement for String
+impl StringCompatibleString of StringCompatible<String> {
+    fn to_bytes(self: String) -> ByteArray {
+        self.data.clone()
+    }
+}
+
+// Implement for String Snapshot
+// impl StringCompatibleStringSnap of StringCompatible<@String> {
+//     fn to_bytes(self: @String) -> ByteArray {
+//         self.data.clone()
+//     }
+// }
+
+// Implement for ByteArray
+impl StringCompatibleByteArray of StringCompatible<ByteArray> {
+    fn to_bytes(self: ByteArray) -> ByteArray {
+        self.clone()
+    }
+}
+
+// Implement for ByteArray Snapshot
+// impl StringCompatibleByteArraySnap of StringCompatible<@ByteArray> {
+//     fn to_bytes(self: @ByteArray) -> ByteArray {
+//         self.clone()
+//     }
+// }
 
 impl StringImpl of StringTrait {
     /// Create a new string
@@ -123,7 +163,7 @@ impl StringImpl of StringTrait {
     fn to_lowercase(self: @String) -> String {
         let mut result: ByteArray = "";
         let mut i: usize = 0;
-        
+
         loop {
             if i >= self.len() {
                 break ();
@@ -158,7 +198,7 @@ impl StringImpl of StringTrait {
     fn to_uppercase(self: @String) -> String {
         let mut result: ByteArray = "";
         let mut i: usize = 0;
-        
+
         loop {
             if i >= self.len() {
                 break ();
@@ -198,13 +238,13 @@ impl StringImpl of StringTrait {
 
         let mut start: usize = 0;
         let mut end: usize = self.len();
-        
+
         // Find first non-whitespace character
         loop {
             if start >= self.len() {
                 break ();
             }
-            
+
             match self.data.at(start) {
                 Option::Some(byte) => {
                     // ASCII 32 is space, 9 is tab, 10 is newline, 13 is carriage return
@@ -214,7 +254,7 @@ impl StringImpl of StringTrait {
                 },
                 Option::None => { break (); },
             }
-            
+
             start += 1;
         };
 
@@ -228,9 +268,9 @@ impl StringImpl of StringTrait {
             if end == 0 {
                 break ();
             }
-            
+
             end -= 1;
-            
+
             match self.data.at(end) {
                 Option::Some(byte) => {
                     // ASCII 32 is space, 9 is tab, 10 is newline, 13 is carriage return
@@ -246,19 +286,17 @@ impl StringImpl of StringTrait {
         // Create new string with characters between start and end
         let mut result: ByteArray = "";
         let mut i = start;
-        
+
         loop {
             if i >= end {
                 break ();
             }
-            
+
             match self.data.at(i) {
-                Option::Some(byte) => {
-                    result.append_byte(byte);
-                },
+                Option::Some(byte) => { result.append_byte(byte); },
                 Option::None => { break (); },
             }
-            
+
             i += 1;
         };
 
@@ -289,9 +327,7 @@ impl StringImpl of StringTrait {
             }
 
             match self.data.at(i) {
-                Option::Some(byte) => {
-                    result.append_byte(byte);
-                },
+                Option::Some(byte) => { result.append_byte(byte); },
                 Option::None => { break (); },
             }
 
@@ -301,6 +337,138 @@ impl StringImpl of StringTrait {
         Self::new(result)
     }
 
-    
+    /// Replace all occurrences of target with replacement
+    /// Generic types T and U must implement StringCompatible
+    fn replace<T, +StringCompatible<T>, +Drop<T>, U, +StringCompatible<U>, +Drop<U>>(
+        self: @String, target: T, replacement: U,
+    ) -> String {
+        let target_bytes = StringCompatible::to_bytes(target);
+        let replacement_bytes = StringCompatible::to_bytes(replacement);
+
+        // Handle empty cases
+        if self.len() == 0 || target_bytes.len() == 0 {
+            return Self::new(self.data.clone());
+        }
+
+        let mut result: ByteArray = "";
+        let mut i: usize = 0;
+
+        loop {
+            if i >= self.len() {
+                break ();
+            }
+
+            // Check for match at current position
+            let mut is_match = true;
+            let mut j: usize = 0;
+
+            if i + target_bytes.len() > self.len() {
+                is_match = false;
+            } else {
+                loop {
+                    if j >= target_bytes.len() {
+                        break ();
+                    }
+
+                    match (self.data.at(i + j), target_bytes.at(j)) {
+                        (
+                            Option::Some(a), Option::Some(b),
+                        ) => { if a != b {
+                            is_match = false;
+                            break ();
+                        } },
+                        (_, _) => {
+                            is_match = false;
+                            break ();
+                        },
+                    }
+
+                    j += 1;
+                };
+            }
+
+            if is_match {
+                // Append replacement
+                let mut k: usize = 0;
+                loop {
+                    if k >= replacement_bytes.len() {
+                        break ();
+                    }
+
+                    match replacement_bytes.at(k) {
+                        Option::Some(byte) => { result.append_byte(byte); },
+                        Option::None => { break (); },
+                    }
+
+                    k += 1;
+                };
+
+                i += target_bytes.len();
+            } else {
+                // Copy current character
+                match self.data.at(i) {
+                    Option::Some(byte) => { result.append_byte(byte); },
+                    Option::None => { break (); },
+                }
+                i += 1;
+            }
+        };
+
+        Self::new(result)
+    }
+
+    /// Check if string contains a pattern
+    /// Generic type T must implement StringCompatible
+    fn contains<T, +StringCompatible<T>, +Drop<T>>(self: @String, pattern: T) -> bool {
+        let pattern_bytes = StringCompatible::to_bytes(pattern);
+
+        // Handle empty string cases
+        if pattern_bytes.len() == 0 {
+            return self.len() == 0;
+        }
+
+        // Pattern longer than string cannot be contained
+        if pattern_bytes.len() > self.len() {
+            return false;
+        }
+
+        let mut i: usize = 0;
+
+        loop {
+            if i > self.len() - pattern_bytes.len() {
+                break false;
+            }
+
+            let mut is_match = true;
+            let mut j: usize = 0;
+
+            loop {
+                if j >= pattern_bytes.len() {
+                    break ();
+                }
+
+                match (self.data.at(i + j), pattern_bytes.at(j)) {
+                    (
+                        Option::Some(a), Option::Some(b),
+                    ) => { if a != b {
+                        is_match = false;
+                        break ();
+                    } },
+                    (_, _) => {
+                        is_match = false;
+                        break ();
+                    },
+                }
+
+                j += 1;
+            };
+
+            if is_match {
+                break true;
+            }
+
+            i += 1;
+        }
+    }
 }
 
