@@ -8,7 +8,7 @@ This guide provides step-by-step instructions for deploying smart contracts on S
 ## 📚 Table of Contents
 1. [🚢 Deployment of Contracts using IDE](#-1-deployment-of-contracts-using-ide)
 
-2. [🚢 Deployment of Contracts using sncast](#-1-deployment-of-contracts-using-sncast)
+2. [🚢 Deployment of Contracts using sncast](#-2-deployment-of-contracts-using-sncast)
 ---
 
 ---
@@ -67,17 +67,17 @@ To compile contracts in Remix using the Starknet plugin:
    - In the **File Explorer**, click **Create** → **New Workspace**.
    - Name the workspace as needed.
 
-2. **Create a New File**
+1. **Create a New File**
    - Within the new workspace, click **New File**.
    - Name the file `hello_world.cairo`.
 
-3. **Copy and Paste the Contract Code**
+2. **Copy and Paste the Contract Code**
    - Go to the [`stark-cairo-nodes`](https://github.com/KaizeNodeLabs/stark-cairo-nodes) repository.
    - Navigate to `examples/contracts/helloWorld/hello_world.cairo`.
    - Copy the contents of the file.
    - Paste the code into the new `hello_world.cairo` file in Remix.
 
-4. **Compile the Contract**
+3. **Compile the Contract**
    - Select the `hello_world.cairo` file in the File Explorer.
    - Open the **Starknet** tab in Remix IDE.
    - Click **Compile** to generate the compiled artifacts.

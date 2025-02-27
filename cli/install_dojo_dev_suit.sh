@@ -77,6 +77,8 @@ main() {
   install_plugins_and_tools
 
   echo "All tools have been installed successfully!"
+  echo "Reloading shell to apply changes"
+  exec $SHELL
 }
 
 main

@@ -229,9 +229,9 @@ This will install the correct versions of the tools specified in the `.tool-vers
 
 You can deploy your smart contracts using the IDE or on Sepolia Testnet using sncast
 
-- For deployment using IDE, follow the steps here [Deployment of Contracts using IDE](https://github.com/KaizeNodeLabs/starkiro/docs/CONTRACT_DEPLOYMENT.md)
+- For deployment using IDE, follow the steps here [Deployment of Contracts using IDE](https://github.com/KaizeNodeLabs/starkiro/blob/main/docs/CONTRACT_DEPLOYMENT.md)
 
-- Also for deployment of contracts using sncast, follow the steps here  [Deployment of Contracts using sncast](https://github.com/KaizeNodeLabs/starkiro/docs/CONTRACT_DEPLOYMENT.md)
+- Also for deployment of contracts using sncast, follow the steps here  [Deployment of Contracts using sncast](https://github.com/KaizeNodeLabs/starkiro/blob/main/docs/CONTRACT_DEPLOYMENT.md)
 
 
 ## Give us a star! ⭐
