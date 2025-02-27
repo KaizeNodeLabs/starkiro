@@ -197,23 +197,4 @@ mod tests {
 
         assert!(tokens_are_equal(regex.pattern, expected), "Trailing special char parsing failed");
     }
-    // #[test]
-// fn test_email_pattern() {
-//     // Test a practical example like an email pattern
-//     let pattern_str: ByteArray = "[a-z]+@[a-z]+\\.[a-z]+";
-//     let regex = RegexTrait::new(pattern_str);
-
-    //     let mut expected = ArrayTrait::new();
-//     expected.append(Token::CharClass(('a'.into(), 'z'.into())));
-//     expected.append(Token::OneOrMore);
-//     expected.append(Token::Literal('@'.into()));
-//     expected.append(Token::CharClass(('a'.into(), 'z'.into())));
-//     expected.append(Token::OneOrMore);
-//     expected.append(Token::Literal('\\'.into()));
-//     expected.append(Token::Literal('.'.into()));
-//     expected.append(Token::CharClass(('a'.into(), 'z'.into())));
-//     expected.append(Token::OneOrMore);
-
-    //     assert!(tokens_are_equal(regex.pattern, expected), "Email pattern parsing failed");
-// }
 }

@@ -6,4 +6,5 @@ mod tests {
     mod test_utils;
     mod test_regex_new;
     mod test_regex_matches;
+    mod find_tests;
 }
