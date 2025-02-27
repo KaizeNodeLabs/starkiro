@@ -28,16 +28,16 @@ mod tests {
 
         assert(*regex.pattern.at(0) == Token::Wildcard, 'expected Wildcard token');
     }
-    // #[test]
-// fn test_char_class_token() {
-//     let regex = RegexTrait::new("h[a-e]llo");
+    #[test]
+    fn test_char_class_token() {
+        let regex = RegexTrait::new("h[a-e]llo");
 
-    //     assert(*regex.pattern.at(0) == Token::CharClass, 'wrong CharClass token');
-// }
-// #[test]
-// fn test_literal_token() {
-//     let regex = RegexTrait::new("hello");
+        assert(*regex.pattern.at(1) == Token::CharClass, 'wrong CharClass token');
+    }
+    #[test]
+    fn test_literal_token() {
+        let regex = RegexTrait::new("hello");
 
-    //     assert(*regex.pattern.at(0) == Token::Literal, 'expected Literal token');
-// }
+        assert(*regex.pattern.at(0) == Token::Literal, 'expected Literal token');
+    }
 }

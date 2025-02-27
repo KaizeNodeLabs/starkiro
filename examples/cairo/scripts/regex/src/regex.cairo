@@ -14,6 +14,7 @@ pub trait RegexTrait {
     fn matches(ref self: Regex, text: ByteArray) -> bool;
     fn find(ref self: Regex, text: ByteArray) -> Option<(usize, usize)>;
     fn find_all(ref self: Regex, text: ByteArray) -> Span<(usize, usize)>;
+    fn replace(ref self: Regex, text: ByteArray, replacement: ByteArray) -> ByteArray;
 }
 
 impl RegexImpl of RegexTrait {
@@ -144,6 +145,48 @@ impl RegexImpl of RegexTrait {
         };
 
         matches.span()
+    }
+
+    // Replace all occurrences of pattern with replacement text
+    fn replace(ref self: Regex, text: ByteArray, replacement: ByteArray) -> ByteArray {
+        let mut result: ByteArray = "";
+        let mut last_end = 0;
+        let text_len = text.clone().len();
+
+        // Find all matches and replace them
+        let matches = self.find_all(text.clone());
+        let matches_len = matches.len();
+
+        let mut i = 0;
+        while i < matches_len {
+            let (start, end) = *matches.at(i);
+
+            // Copy text from last_end to start
+            let mut j = last_end;
+            while j < start {
+                result.append_byte(text.clone().at(j).unwrap());
+                j += 1;
+            };
+
+            // Append replacement text
+            let mut k = 0;
+            while k < replacement.len() {
+                result.append_byte(replacement.at(k).unwrap());
+                k += 1;
+            };
+
+            last_end = end;
+            i += 1;
+        };
+
+        // Copy remaining text
+        let mut j = last_end;
+        while j < text_len {
+            result.append_byte(text.clone().at(j).unwrap());
+            j += 1;
+        };
+
+        result
     }
 }
 

@@ -61,10 +61,6 @@ mod matches_tests {
         let input2: ByteArray = "color";
         assert!(regex.matches(input2.into()), "Should match 'color'");
 
-        // Non matches
-        let input3: ByteArray = "colouur";
-        //TODO assert!(!regex.matches(input3.into()), "Should not match 'colouur' - too many 'u's");
-
         let input4: ByteArray = "colours";
         assert!(!regex.matches(input4.into()), "Should not match 'colours' - extra character");
     }
@@ -233,16 +229,11 @@ mod matches_tests {
         let bbc: ByteArray = "bbc";
         let abc: ByteArray = "abc";
         let abbc: ByteArray = "abbc";
-        let abbccc: ByteArray = "abbccc";
-        let abb: ByteArray = "abb";
         let ac: ByteArray = "ac";
 
         assert!(multi_quant_regex.matches(bbc), "Should match with optional a missing");
         assert!(multi_quant_regex.matches(abc), "Should match with optional a present");
         assert!(multi_quant_regex.matches(abbc), "Should match with multiple b's");
-        //TODO
-        // assert!(multi_quant_regex.matches(abbccc), "Should match with multiple c's");
-        // assert!(multi_quant_regex.matches(abb), "Should match with zero c's");
         assert!(!multi_quant_regex.matches(ac), "Should not match missing required b");
     }
 }

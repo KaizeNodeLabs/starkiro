@@ -8,4 +8,5 @@ mod tests {
     mod test_regex_matches;
     mod find_tests;
     mod find_all_tests;
+    mod replace_tests;
 }

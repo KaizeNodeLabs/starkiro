@@ -4,7 +4,6 @@ mod tests {
     use regex::regex::{Regex, RegexTrait};
     use regex::tests::test_utils::tokens_are_equal;
 
-
     #[test]
     fn test_literal_pattern() {
         let pattern_str: ByteArray = "hello";
@@ -137,32 +136,6 @@ mod tests {
 
         assert!(tokens_are_equal(regex.pattern, expected), "Empty pattern parsing failed");
     }
-
-    // #[test]
-    // fn test_special_chars_as_literals() {
-    //     // Testing special characters when they should be treated as literals
-    //     let pattern_str: ByteArray = "\\*\\+\\?\\.\\\\\\/";
-    //     let regex = RegexTrait::new(pattern_str);
-
-    //     let mut expected = ArrayTrait::new();
-    //     expected.append(Token::Literal('\\'.into()));
-    //     expected.append(Token::Literal('*'.into()));
-    //     expected.append(Token::Literal('\\'.into()));
-    //     expected.append(Token::Literal('+'.into()));
-    //     expected.append(Token::Literal('\\'.into()));
-    //     expected.append(Token::Literal('?'.into()));
-    //     expected.append(Token::Literal('\\'.into()));
-    //     expected.append(Token::Literal('.'.into()));
-    //     expected.append(Token::Literal('\\'.into()));
-    //     expected.append(Token::Literal('\\'.into()));
-    //     expected.append(Token::Literal('\\'.into()));
-    //     expected.append(Token::Literal('/'.into()));
-
-    //     assert!(
-    //         tokens_are_equal(regex.pattern, expected), "Special chars as literals parsing
-    //         failed",
-    //     );
-    // }
 
     #[test]
     fn test_malformed_character_class() {

@@ -39,3 +39,14 @@ pub fn tokens_are_equal(actual: Array<Token>, expected: Array<Token>) -> bool {
 
     result
 }
+
+// Helper function to compare ByteArrays
+pub fn assert_equal_bytearrays(actual: ByteArray, expected: ByteArray) {
+    assert!(actual.len() == expected.len(), "Lenght not equal");
+
+    let mut i = 0;
+    while i < actual.len() {
+        assert!(actual.at(i).unwrap() == expected.at(i).unwrap(), "content not the same");
+        i += 1;
+    }
+}
