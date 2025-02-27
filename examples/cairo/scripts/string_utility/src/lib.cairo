@@ -47,13 +47,6 @@ impl StringCompatibleString of StringCompatible<String> {
     }
 }
 
-// Implement for String Snapshot
-// impl StringCompatibleStringSnap of StringCompatible<@String> {
-//     fn to_bytes(self: @String) -> ByteArray {
-//         self.data.clone()
-//     }
-// }
-
 // Implement for ByteArray
 impl StringCompatibleByteArray of StringCompatible<ByteArray> {
     fn to_bytes(self: ByteArray) -> ByteArray {
@@ -61,12 +54,6 @@ impl StringCompatibleByteArray of StringCompatible<ByteArray> {
     }
 }
 
-// Implement for ByteArray Snapshot
-// impl StringCompatibleByteArraySnap of StringCompatible<@ByteArray> {
-//     fn to_bytes(self: @ByteArray) -> ByteArray {
-//         self.clone()
-//     }
-// }
 
 impl StringImpl of StringTrait {
     /// Create a new string
