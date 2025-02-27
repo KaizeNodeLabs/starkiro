@@ -7,16 +7,6 @@ pub enum Token {
     OneOrMore, // +
     ZeroOrMore // *
 }
-// impl TokenIntoFelt252 of Into<Genre, felt252> {
-//     fn into(self: Token) -> felt252 {
-//         match self {
-//             Token::Literal(l) => l,
-//             Token::Wildcard => 46, // ASCII value of '*'
-//             Token::CharClass(s, e) => ,
-//         }
-// }}
-
-// impl Felt252TryIntoToken of TryInto<felt252, Genre> {}
 
 impl TokenIntoFelt252 of Into<Token, felt252> {
     fn into(self: Token) -> felt252 {
@@ -32,4 +22,3 @@ impl TokenIntoFelt252 of Into<Token, felt252> {
         }
     }
 }
-

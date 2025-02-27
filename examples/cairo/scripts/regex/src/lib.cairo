@@ -5,7 +5,7 @@ pub mod token;
 mod tests {
     mod test_utils;
     mod test_regex_new;
-    mod test_regex_matches;
+    mod matches_tests;
     mod find_tests;
     mod find_all_tests;
     mod replace_tests;
