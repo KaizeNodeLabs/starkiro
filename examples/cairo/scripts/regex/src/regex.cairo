@@ -13,6 +13,7 @@ pub trait RegexTrait {
     fn new(pattern_str: ByteArray) -> Regex;
     fn matches(ref self: Regex, text: ByteArray) -> bool;
     fn find(ref self: Regex, text: ByteArray) -> Option<(usize, usize)>;
+    fn find_all(ref self: Regex, text: ByteArray) -> Span<(usize, usize)>;
 }
 
 impl RegexImpl of RegexTrait {
@@ -116,6 +117,33 @@ impl RegexImpl of RegexTrait {
         };
 
         result
+    }
+
+    // Find all occurrences of pattern in text
+    fn find_all(ref self: Regex, text: ByteArray) -> Span<(usize, usize)> {
+        let mut matches = ArrayTrait::new();
+        let mut start_pos = 0;
+        let text_len = text.clone().len();
+
+        while start_pos < text_len {
+            let match_result = self._match(text.clone(), start_pos, 0);
+            match match_result {
+                Option::Some((
+                    end_pos, _,
+                )) => {
+                    matches.append((start_pos, end_pos));
+                    // Move past this match to find the next one
+                    start_pos = if end_pos > start_pos {
+                        end_pos
+                    } else {
+                        start_pos + 1
+                    };
+                },
+                Option::None => start_pos += 1,
+            }
+        };
+
+        matches.span()
     }
 }
 
