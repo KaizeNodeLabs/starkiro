@@ -12,6 +12,10 @@ pub trait ITournamentReward<TContractState> {
         score3: u32,
     );
     fn claim_reward(ref self: TContractState);
+    fn get_winner_info(ref self: TContractState, winner: ContractAddress) -> (u32, u256, bool, u64);
+
+    fn update_prize_pool(ref self: TContractState, amount: u256);
+    fn end_tournament(ref self: TContractState);
 }
 
 #[starknet::contract]
@@ -34,6 +38,14 @@ pub mod TournamentReward {
         total_claimed_amount: u256,
     }
 
+    #[constructor]
+    fn constructor(ref self: ContractState, owner: ContractAddress, initial_prize_pool: u256) {
+        self.owner.write(owner);
+        self.prize_pool.write(initial_prize_pool);
+        self.tournament_ended.write(false);
+        self.rewards_distributed.write(false);
+    }
+
     #[derive(Copy, Drop, Serde, starknet::Store)]
     pub struct RewardInfo {
         winner: ContractAddress,
@@ -43,9 +55,44 @@ pub mod TournamentReward {
         claim_timestamp: u64,
     }
 
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    pub enum Event {
+        RewardDistributed: RewardDistributed,
+        RewardClaimed: RewardClaimed,
+        PrizePoolUpdated: PrizePoolUpdated,
+        TournamentEnded: TournamentEnded,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct RewardDistributed {
+        first: ContractAddress,
+        second: ContractAddress,
+        third: ContractAddress,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct PrizePoolUpdated {
+        old_amount: u256,
+        new_amount: u256,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct TournamentEnded {
+        timestamp: u64,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct RewardClaimed {
+        winner: ContractAddress,
+        amount: u256,
+    }
+
+
     mod RewardError {
         pub const OnlyOwner: felt252 = 'OnlyOwner';
         pub const TournamentNotEnded: felt252 = 'Tournament not ended';
+        pub const RewardsNotDistributed: felt252 = 'RewardsNotDistributed';
         pub const RewardsAlreadyDistributed: felt252 = 'Rewards Distributed';
         pub const DuplicateWinners: felt252 = 'Duplicate Winners';
         pub const InvalidScores: felt252 = 'InvalidScores';
@@ -57,6 +104,23 @@ pub mod TournamentReward {
 
     #[abi(embed_v0)]
     impl ITournamentReward of super::ITournamentReward<ContractState> {
+        fn end_tournament(ref self: ContractState) {
+            let caller = get_caller_address();
+            assert(caller == self.owner.read(), RewardError::OnlyOwner);
+            assert(!self.tournament_ended.read(), 'Tournament already ended');
+            self.tournament_ended.write(true);
+            self.emit(Event::TournamentEnded(TournamentEnded { timestamp: get_block_timestamp() }));
+        }
+
+        fn update_prize_pool(ref self: ContractState, amount: u256) {
+            let caller = get_caller_address();
+            assert(caller == self.owner.read(), RewardError::OnlyOwner);
+            assert(!self.rewards_distributed.read(), 'Rewards already distributed');
+            let old_amount = self.prize_pool.read();
+            self.prize_pool.write(amount);
+            self.emit(Event::PrizePoolUpdated(PrizePoolUpdated { old_amount, new_amount: amount }));
+        }
+
         fn distribute_tournament_rewards(
             ref self: ContractState,
             first: ContractAddress,
@@ -127,13 +191,15 @@ pub mod TournamentReward {
             self.winner_to_rank.entry(third).write(3);
 
             self.rewards_distributed.write(true);
+
+            self.emit(Event::RewardDistributed(RewardDistributed { first, second, third }));
         }
 
         fn claim_reward(ref self: ContractState) {
-            let caller = get_caller_address();
-            assert(self.rewards_distributed.read(), RewardError::RewardsAlreadyDistributed);
+            let winner = get_caller_address();
+            assert(self.rewards_distributed.read(), RewardError::RewardsNotDistributed);
 
-            let rank = self.winner_to_rank.entry(caller).read();
+            let rank = self.winner_to_rank.entry(winner).read();
             assert(rank > 0, RewardError::NotAWinner);
 
             let mut reward_info = self.winners.entry(rank).read();
@@ -144,7 +210,20 @@ pub mod TournamentReward {
             self.winners.entry(rank).write(reward_info);
 
             let current_claimed = self.total_claimed_amount.read();
-            self.total_claimed_amount.write(current_claimed + reward_info.reward_amount);
+            let amount = reward_info.reward_amount;
+            self.total_claimed_amount.write(current_claimed + amount);
+
+            self.emit(Event::RewardClaimed(RewardClaimed { winner, amount }));
+        }
+
+        fn get_winner_info(
+            ref self: ContractState, winner: ContractAddress,
+        ) -> (u32, u256, bool, u64) {
+            let rank = self.winner_to_rank.entry(winner).read();
+            assert(rank > 0, RewardError::NotAWinner);
+
+            let reward_info = self.winners.entry(rank).read();
+            (rank, reward_info.reward_amount, reward_info.claimed, reward_info.claim_timestamp)
         }
     }
 }
