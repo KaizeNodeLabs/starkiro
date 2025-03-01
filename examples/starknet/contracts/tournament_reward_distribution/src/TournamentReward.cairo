@@ -16,6 +16,8 @@ pub trait ITournamentReward<TContractState> {
 
     fn update_prize_pool(ref self: TContractState, amount: u256);
     fn end_tournament(ref self: TContractState);
+    fn get_prize_pool(self: @TContractState) -> u256;
+    fn is_tournament_ended(self: @TContractState) -> bool;
 }
 
 #[starknet::contract]
@@ -65,27 +67,27 @@ pub mod TournamentReward {
     }
 
     #[derive(Drop, starknet::Event)]
-    struct RewardDistributed {
-        first: ContractAddress,
-        second: ContractAddress,
-        third: ContractAddress,
+    pub struct RewardDistributed {
+        pub first: ContractAddress,
+        pub second: ContractAddress,
+        pub third: ContractAddress,
     }
 
     #[derive(Drop, starknet::Event)]
-    struct PrizePoolUpdated {
-        old_amount: u256,
-        new_amount: u256,
+    pub struct PrizePoolUpdated {
+        pub old_amount: u256,
+        pub new_amount: u256,
     }
 
     #[derive(Drop, starknet::Event)]
-    struct TournamentEnded {
-        timestamp: u64,
+    pub struct TournamentEnded {
+        pub timestamp: u64,
     }
 
     #[derive(Drop, starknet::Event)]
-    struct RewardClaimed {
-        winner: ContractAddress,
-        amount: u256,
+    pub struct RewardClaimed {
+        pub winner: ContractAddress,
+        pub amount: u256,
     }
 
 
@@ -224,6 +226,14 @@ pub mod TournamentReward {
 
             let reward_info = self.winners.entry(rank).read();
             (rank, reward_info.reward_amount, reward_info.claimed, reward_info.claim_timestamp)
+        }
+
+        fn get_prize_pool(self: @ContractState) -> u256 {
+            self.prize_pool.read()
+        }
+
+        fn is_tournament_ended(self: @ContractState) -> bool {
+            self.tournament_ended.read()
         }
     }
 }
