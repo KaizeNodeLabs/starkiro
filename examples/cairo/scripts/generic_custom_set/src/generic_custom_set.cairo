@@ -1,6 +1,3 @@
-// Custom Set implementation in Cairo
-// A generic data structure that maintains unique elements
-
 #[derive(Copy, Drop)]
 pub struct Node<T> {
     pub value: T,
@@ -18,12 +15,10 @@ pub struct CustomSet<T> {
 
 #[generate_trait]
 pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of CustomSetTrait<T> {
-    // Create a new empty set
     fn new() -> CustomSet<T> {
         CustomSet { root: Option::None, size: 0 }
     }
 
-    // Create a new set from an array of elements
     fn from_array(elements: @Array<T>) -> CustomSet<T> {
         let mut set = CustomSetTrait::new();
         let mut i = 0;
@@ -37,10 +32,9 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         set
     }
 
-    // Add an element to the set if it doesn't already exist
     fn add(ref self: CustomSet<T>, value: T) -> bool {
         if self.contains(value) {
-            return false; // Element already exists
+            return false;
         }
 
         self.root = self.root.insert(value);
@@ -48,34 +42,27 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         true
     }
 
-    // Check if the set contains a specific element
     fn contains(self: @CustomSet<T>, value: T) -> bool {
         !(*self.root).search(value).is_none()
     }
 
-    // Check if the set is empty
     fn is_empty(self: @CustomSet<T>) -> bool {
         (*self.root).is_none()
     }
 
-    // Get the size of the set
     fn len(self: @CustomSet<T>) -> u32 {
         *self.size
     }
 
-    // Check if this set is a subset of another set
     fn is_subset(self: @CustomSet<T>, other: @CustomSet<T>) -> bool {
-        // If self is empty, it's always a subset
         if (*self.root).is_none() {
             return true;
         }
 
-        // If self has more elements than other, it can't be a subset
         if *self.size > *other.size {
             return false;
         }
 
-        // Convert self to an array and check if each element exists in other
         let elements = self.to_array();
         let mut i = 0;
         let len = elements.len();
@@ -90,14 +77,11 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         true
     }
 
-    // Check if this set is disjoint with another set (no common elements)
     fn is_disjoint(self: @CustomSet<T>, other: @CustomSet<T>) -> bool {
-        // If either set is empty, they are disjoint
         if (*self.root).is_none() || (*other.root).is_none() {
             return true;
         }
 
-        // Check if any element in self exists in other
         let elements = self.to_array();
         let mut i = 0;
         let len = elements.len();
@@ -115,16 +99,13 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         !has_common
     }
 
-    // Create a new set with elements common to both sets
     fn intersection(self: @CustomSet<T>, other: @CustomSet<T>) -> CustomSet<T> {
         let mut result = CustomSetTrait::new();
 
-        // If either set is empty, the intersection is empty
         if (*self.root).is_none() || (*other.root).is_none() {
             return result;
         }
 
-        // Add elements from self that also exist in other
         let elements = self.to_array();
         let mut i = 0;
         let len = elements.len();
@@ -140,21 +121,17 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         result
     }
 
-    // Create a new set with elements in self but not in other
     fn difference(self: @CustomSet<T>, other: @CustomSet<T>) -> CustomSet<T> {
         let mut result = CustomSetTrait::new();
 
-        // If self is empty, the difference is empty
         if (*self.root).is_none() {
             return result;
         }
 
-        // If other is empty, the difference is self
         if (*other.root).is_none() {
             return self.copy();
         }
 
-        // Add elements from self that don't exist in other
         let elements = self.to_array();
         let mut i = 0;
         let len = elements.len();
@@ -170,16 +147,13 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         result
     }
 
-    // Create a new set with elements from both sets
     fn union(self: @CustomSet<T>, other: @CustomSet<T>) -> CustomSet<T> {
         let mut result = self.copy();
 
-        // If other is empty, return a copy of self
         if (*other.root).is_none() {
             return result;
         }
 
-        // Add all elements from other to result
         let elements = other.to_array();
         let mut i = 0;
         let len = elements.len();
@@ -193,16 +167,13 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         result
     }
 
-    // Create a copy of the current set
     fn copy(self: @CustomSet<T>) -> CustomSet<T> {
         let mut result = CustomSetTrait::new();
 
-        // If self is empty, return an empty set
         if (*self.root).is_none() {
             return result;
         }
 
-        // Add all elements from self to result
         let elements = self.to_array();
         let mut i = 0;
         let len = elements.len();
@@ -216,14 +187,12 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
         result
     }
 
-    // Convert the set to an array
     fn to_array(self: @CustomSet<T>) -> @Array<T> {
         let mut result = ArrayTrait::new();
         self.in_order_traversal(*self.root, ref result);
         @result
     }
 
-    // Helper function for in-order traversal
     fn in_order_traversal(self: @CustomSet<T>, node: NodePtr<T>, ref result: Array<T>) {
         match node {
             Option::None => {},
@@ -236,7 +205,6 @@ pub impl CustomSetImpl<T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>> of 
     }
 }
 
-// Tree operations for set implementation
 #[generate_trait]
 impl BinarySearchTreeImpl<
     T, +PartialOrd<T>, +PartialEq<T>, +Copy<T>, +Drop<T>,
@@ -264,7 +232,6 @@ impl BinarySearchTreeImpl<
                         ),
                     )
                 } else {
-                    // Value already exists, return unchanged
                     self
                 }
             },
@@ -284,5 +251,23 @@ impl BinarySearchTreeImpl<
                 }
             },
         }
+    }
+}
+
+impl PartialOrdFelt252 of PartialOrd<felt252> {
+    fn lt(lhs: felt252, rhs: felt252) -> bool {
+        lhs < rhs
+    }
+
+    fn le(lhs: felt252, rhs: felt252) -> bool {
+        lhs <= rhs
+    }
+
+    fn gt(lhs: felt252, rhs: felt252) -> bool {
+        lhs > rhs
+    }
+
+    fn ge(lhs: felt252, rhs: felt252) -> bool {
+        lhs >= rhs
     }
 }
