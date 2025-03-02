@@ -27,7 +27,7 @@ pub mod TournamentReward {
     use starknet::{get_caller_address, get_block_timestamp};
     use core::starknet::storage::{Map};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use super::*;
+    //use super::;
 
     #[storage]
     struct Storage {

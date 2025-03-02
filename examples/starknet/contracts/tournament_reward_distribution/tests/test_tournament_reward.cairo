@@ -58,9 +58,14 @@ fn test_distribute_rewards() {
     let winner_info_2 = rewards.get_winner_info(player2());
     let winner_info_3 = rewards.get_winner_info(player3());
 
-    assert_eq!(winner_info_1.score, 500, "Player 1 reward incorrect");
-    assert_eq!(winner_info_2.1, 300, "Player 2 reward incorrect");
-    assert_eq!(winner_info_3.1, 200, "Player 3 reward incorrect");
+    // Using proper tuple destructuring
+    let (_, reward_1, _, _) = winner_info_1;
+    let (_, reward_2, _, _) = winner_info_2;
+    let (_, reward_3, _, _) = winner_info_3;
+
+    assert!(reward_1 == 500, "Player 1 reward incorrect");
+    assert!(reward_2 == 300, "Player 2 reward incorrect");
+    assert!(reward_3 == 200, "Player 3 reward incorrect");
 
     spy
         .assert_emitted(
@@ -105,7 +110,9 @@ fn test_claim_reward() {
     rewards.claim_reward();
 
     let winner_info = rewards.get_winner_info(player1());
-    assert_eq!(winner_info.2, true, "Reward claim status not updated");
+
+    let (_, _, claimed, _) = winner_info;
+    assert!(claimed == true, "Reward claim status not updated");
 
     spy
         .assert_emitted(
@@ -164,7 +171,7 @@ fn test_cannot_claim_twice() {
 }
 
 #[test]
-#[should_panic(expected: ('TournamentNotEnded',))]
+#[should_panic(expected: ('Tournament not ended',))]
 fn test_cannot_distribute_rewards_before_end() {
     let total_prize_pool: u256 = 1000;
     let contract_address = deploy_rewards_contract(total_prize_pool);
@@ -189,7 +196,7 @@ fn test_update_prize_pool() {
     cheat_caller_address(contract_address, owner(), CheatSpan::TargetCalls(1));
     rewards.update_prize_pool(new_prize_pool);
 
-    assert_eq!(rewards.prize_pool.read(), new_prize_pool, "Prize pool not updated");
+    assert!(rewards.get_prize_pool() == new_prize_pool, "Prize pool not updated");
 
     spy
         .assert_emitted(
@@ -228,7 +235,7 @@ fn test_end_tournament() {
     cheat_caller_address(contract_address, owner(), CheatSpan::TargetCalls(1));
     rewards.end_tournament();
 
-    assert_eq!(rewards.tournament_ended.read(), true, "Tournament not ended");
+    assert!(rewards.is_tournament_ended() == true, "Tournament not ended");
 
     spy
         .assert_emitted(
