@@ -2,9 +2,13 @@ pub mod format {
     pub mod formatting;
 }
 pub mod date;
+pub mod datetime;
 pub mod internals;
 pub mod month;
+pub mod time_delta;
+pub mod time;
 pub mod utils;
+pub mod weekday;
 
 /// A duration in calendar days.
 ///

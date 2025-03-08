@@ -1,7 +1,7 @@
 use core::num::traits::Bounded;
 use datetime::internals::{
-    YearFlags, YearFlagsTrait, A, AG, B, BA, C, CB, D, DC, E, ED, F, FE, G, GF, Mdf, MdfTrait,
-    MDL_TO_OL,
+    A, AG, B, BA, C, CB, D, DC, E, ED, F, FE, G, GF, MDL_TO_OL, Mdf, MdfTrait, YearFlags,
+    YearFlagsTrait,
 };
 
 #[test]
@@ -13,12 +13,30 @@ fn test_year_flags_ndays_from_year() {
     assert_eq!(YearFlagsTrait::from_year(1600).ndays(), 366);
     assert_eq!(YearFlagsTrait::from_year(1).ndays(), 365);
     assert_eq!(YearFlagsTrait::from_year(0).ndays(), 366); // 1 BCE (proleptic Gregorian)
-    // assert_eq!(YearFlagsTrait::from_year(-1).ndays(), 365); // 2 BCE
-// assert_eq!(YearFlagsTrait::from_year(-4).ndays(), 366); // 5 BCE
-// assert_eq!(YearFlagsTrait::from_year(-99).ndays(), 365); // 100 BCE
-// assert_eq!(YearFlagsTrait::from_year(-100).ndays(), 365); // 101 BCE
-// assert_eq!(YearFlagsTrait::from_year(-399).ndays(), 365); // 400 BCE
-// assert_eq!(YearFlagsTrait::from_year(-400).ndays(), 366); // 401 BCE
+    assert_eq!(YearFlagsTrait::from_year(-1).ndays(), 365); // 2 BCE
+    assert_eq!(YearFlagsTrait::from_year(-4).ndays(), 366); // 5 BCE
+    assert_eq!(YearFlagsTrait::from_year(-99).ndays(), 365); // 100 BCE
+    assert_eq!(YearFlagsTrait::from_year(-100).ndays(), 365); // 101 BCE
+    assert_eq!(YearFlagsTrait::from_year(-399).ndays(), 365); // 400 BCE
+    assert_eq!(YearFlagsTrait::from_year(-400).ndays(), 366); // 401 BCE
+}
+
+#[test]
+fn test_year_flags_nisoweeks() {
+    assert_eq!(A.nisoweeks(), 52);
+    assert_eq!(B.nisoweeks(), 52);
+    assert_eq!(C.nisoweeks(), 52);
+    assert_eq!(D.nisoweeks(), 53);
+    assert_eq!(E.nisoweeks(), 52);
+    assert_eq!(F.nisoweeks(), 52);
+    assert_eq!(G.nisoweeks(), 52);
+    assert_eq!(AG.nisoweeks(), 52);
+    assert_eq!(BA.nisoweeks(), 52);
+    assert_eq!(CB.nisoweeks(), 52);
+    assert_eq!(DC.nisoweeks(), 53);
+    assert_eq!(ED.nisoweeks(), 53);
+    assert_eq!(FE.nisoweeks(), 52);
+    assert_eq!(GF.nisoweeks(), 52);
 }
 
 const NONLEAP_FLAGS: [YearFlags; 7] = [A, B, C, D, E, F, G];
@@ -33,7 +51,6 @@ fn check_mdf_valid(
     expected: bool, flags: YearFlags, month1: u32, day1: u32, month2: u32, day2: u32,
 ) {
     for month in month1..month2 + 1 {
-        //println!("month: {}", month);
         for day in day1..day2 + 1 {
             let mdf_opt = MdfTrait::new(month, day, flags);
             if mdf_opt.is_none() {
@@ -102,7 +119,7 @@ fn test_mdf_valid() {
             Bounded::<u32>::MAX - 1,
             Bounded::<u32>::MAX - 1,
         );
-    };
+    }
     for i in 0_usize..7 {
         let flags = *LEAP_FLAGS.span()[i];
         check_mdf_valid(false, flags, 0, 0, 0, 1024);
@@ -181,7 +198,7 @@ fn check_mdf_with_fields(flags: YearFlags, month: u32, day: u32) {
             assert_eq!(mdf.month(), month);
             assert_eq!(mdf.day(), day);
         }
-    };
+    }
     for day in 0_usize..1025 {
         let mdf_opt = mdf.with_day(day);
         if mdf_opt.is_none() {
@@ -210,7 +227,7 @@ fn test_mdf_with_fields() {
         check_mdf_with_fields(flags, 2, 28);
         check_mdf_with_fields(flags, 2, 29);
         check_mdf_with_fields(flags, 12, 31);
-    };
+    }
     for i in 0_usize..7 {
         let flags = *LEAP_FLAGS.span()[i];
         check_mdf_with_fields(flags, 1, 1);
