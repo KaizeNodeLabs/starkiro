@@ -56,7 +56,7 @@ pub fn decode(morse_text: ByteArray) -> ByteArray {
 
 fn main() {
     // Example usage (optional)
-    let input = "Gideon Bature";
+    let input = "Grace Andrew Ajogi";
     let encoded = encode(input);
 
     println!("Encoded: {}", encoded);
