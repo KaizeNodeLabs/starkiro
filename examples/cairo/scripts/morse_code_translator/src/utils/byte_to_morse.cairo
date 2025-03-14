@@ -1,13 +1,5 @@
-fn main() {
-    // Example usage (optional)
-    let input = "GEEKS-FOR-GEEKS";
-    let encoded = encode(input);
-
-    println!("Encoded: {}", encoded);
-}
-
 // Helper function to map ASCII characters (felt252) to Morse code (ByteArray)
-fn get_morse_code(ch: u8) -> ByteArray {
+pub fn get_morse_code(ch: u8) -> ByteArray {
     if ch == 32 {       // ' '
         " "
     } else if ch == 65 || ch == 97 { // 'A'
@@ -99,23 +91,4 @@ fn get_morse_code(ch: u8) -> ByteArray {
     } else {             // Unknown characters
         ""
     }
-}
-
-// Encode text to Morse code, mimicking the Python logic
-fn encode(text: ByteArray) -> ByteArray {
-    let mut result: ByteArray = "";
-    let text_len = text.len();
-    let space = get_morse_code(32);
-
-    for i in 0..text_len {
-        let mut ch_byte = text.at(i).unwrap();
-        if ch_byte == 32 { // ASCII 32 is space
-            result.append(@space); // Extra space for word separation
-        } else {
-            let morse = get_morse_code(ch_byte);
-            result.append(@morse); // Append Morse code
-            result.append(@space);   // Space after Morse code
-        }
-    }
-    result
 }
