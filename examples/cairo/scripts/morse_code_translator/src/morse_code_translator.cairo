@@ -19,6 +19,7 @@ pub fn encode(text: ByteArray) -> ByteArray {
             }
         }
     }
+
     result
 }
 
@@ -39,7 +40,6 @@ pub fn decode(morse_text: ByteArray) -> ByteArray {
 
             let mut next_ch_byte = morse_text.at(i + 1).unwrap();
 
-            
             let morse = char_from_morse::get_char_from_morse(current_symbol);
             result.append(@morse);
             current_symbol = "";
@@ -49,6 +49,7 @@ pub fn decode(morse_text: ByteArray) -> ByteArray {
             }
         }
     }
+
     let morse = char_from_morse::get_char_from_morse(current_symbol);
     result.append(@morse);
     result
