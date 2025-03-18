@@ -1,2 +1,6 @@
-mod main;
-use string_utility::{String, StringTrait}; 
+pub mod main;
+
+#[cfg(test)]
+mod tests {
+    mod test_main;
+}

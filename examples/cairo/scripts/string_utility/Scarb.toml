@@ -5,6 +5,9 @@ edition = "2024_07"
 
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
+[lib]
+crate-type = ["lib"]
+
 [dependencies]
 starknet = "2.9.2"
 
@@ -43,6 +46,10 @@ test = "snforge test"
 # [profile.dev.cairo]                                        # Configure Cairo compiler
 # unstable-add-statements-code-locations-debug-info = true   # Should be used if you want to use coverage
 # unstable-add-statements-functions-debug-info = true        # Should be used if you want to use coverage/profiler
+# inlining-strategy = "avoid"                                # Should be used if you want to use coverage
+
+# [features]                                                 # Used for conditional compilation
+# enable_for_tests = []                                      # Feature name and list of other features that should be enabled with it
 # inlining-strategy = "avoid"                                # Should be used if you want to use coverage
 
 # [features]                                                 # Used for conditional compilation
