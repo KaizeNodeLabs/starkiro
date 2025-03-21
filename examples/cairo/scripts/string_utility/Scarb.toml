@@ -1,7 +1,7 @@
 [package]
 name = "string_utility"
 version = "0.1.0"
-description = "Library providing essential operations for string manipulation"
+description = "A Cairo library providing essential string manipulation functions"
 repository = "https://github.com/KaizeNodeLabs/starkiro/tree/main/examples/cairo/scripts/string_utility"
 edition = "2024_07"
 
