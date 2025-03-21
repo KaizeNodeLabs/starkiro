@@ -1,4 +1,4 @@
-use string_utility::{StringTrait};
+use string_utility::string_utility::{StringTrait};
 use core::byte_array::ByteArray;
 
 #[test]
