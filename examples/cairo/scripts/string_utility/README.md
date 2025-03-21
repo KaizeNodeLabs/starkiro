@@ -1,4 +1,4 @@
-# String utility
+# String Utility
 
 **A Cairo library providing essential string manipulation functions**
 
@@ -26,6 +26,11 @@ Import and use the library in your Cairo file:
 
 ```cairo
 use string_utility::{StringTrait};
+
+fn main() {
+    // Create an empty instance of StringTrait
+    let mut strng = StringTrait::new("");
+}
 ```
 
 For a detailed example of how to integrate and use this library in a Cairo project, check the [examples](./examples) folder.
