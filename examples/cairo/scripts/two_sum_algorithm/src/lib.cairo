@@ -1,1 +1,1 @@
-mod two_sum_algorithm;
+pub mod two_sum_algorithm;

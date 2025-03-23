@@ -1,21 +1,6 @@
 use core::array::ArrayTrait;
 use super::*;
-pub fn two_sum(nums: Array<u128>, target: u128) -> (u32, u32) {
-    let length = nums.len();
-    let mut low = 0;
-    let mut high = 0;
-
-    for i in 0..length {
-        for j in (i + 1)..length {
-            let sum = *nums[i] + *nums[j];
-            if sum == target {
-                low = i;
-                high = j;
-            }
-        }
-    };
-    (low, high)
-}
+use two_sum_algorithm::two_sum_algorithm::two_sum;
 
 #[test]
 fn test_two_sum_found() {
