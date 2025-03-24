@@ -3,28 +3,13 @@
 Chrono aims to provide all functionality needed to do correct operations on dates and times in the [proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar).
 This library is a Cairo port of a subset of the [Rust library with the same name](https://docs.rs/chrono/latest/chrono/), without timezone support.
 
-## Installation
-
-In your project directory, run the following command to add the library as a dependency:
-
-```sh
-scarb add chrono@0.1.0
-```
-
-Alternatively, you can manually add the dependency. In your Scarb.toml file, include:
-
-```toml
-[dependencies]
-chrono = "0.1.0"
-```
-
 ## Overview
 
-### [Time Delta](./src/time_delta.cairo)
+### [Time Delta](#time-delta)
 
 Chrono has a `TimeDelta` type to represent the magnitude of a time span. This is an “accurate” duration represented as seconds, and does not represent “nominal” components such as days or months.
 
-### [Date and Time](./src/datetime.cairo)
+### [Date and Time](#date-time)
 
 Chrono provides a `DateTime` type to represent an ISO 8601 combined date and time without timezone.
 
@@ -91,7 +76,7 @@ assert_eq!(
 );
 ```
 
-### Formatting
+### [Formatting](#formatting)
 
 At the moment we only support simple formatting through the `Display` trait to format the date and time to a `ByteArray` using this format: `yyyy-MM-dd HH:mm:ss`.
 
@@ -102,7 +87,7 @@ let dt: DateTime = Default::default();
 assert_eq!(format!("{}", dt), "1970-01-01 00:00:00");
 ```
 
-### Conversion from and to EPOCH timestamps
+### [Conversion from and to EPOCH timestamps](#timestamps)
 
 Use `DateTimeTrait::from_timestamp(i64: secs)` to construct a `DateTime` from a UNIX timestamp (seconds that passed since January 1st 1970).
 
@@ -134,12 +119,12 @@ assert_eq!(
 );
 ```
 
-### Limitations
+## Limitations
 
 - Only the proleptic Gregorian calendar (i.e. extended to support older dates) is supported.
 - Date types are limited to about + 262,000 years from the common epoch.
 - At the moment negative years are not supported.
 
-### Cairo version requirements
+## Cairo version requirements
 
-The Minimum Supported Cairo Version is currently Cairo 2.11.0.
+The Minimum Supported Cairo Version is currently Cairo 2.11.2.
