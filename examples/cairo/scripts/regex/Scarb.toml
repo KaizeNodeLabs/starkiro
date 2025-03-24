@@ -1,11 +1,17 @@
 [package]
 name = "regex"
 version = "0.1.0"
+description = "A cairo library providing a simplified regex engine supporting essential pattern matching features"
+repository = "https://github.com/KaizeNodeLabs/starkiro/tree/main/examples/cairo/scripts/regex"
 edition = "2024_07"
 
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+Create-type = ["lib"]
 
 [dependencies]
 
 [dev-dependencies]
 cairo_test = "2.9.2"
+
+[lib]
