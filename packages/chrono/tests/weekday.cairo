@@ -1,4 +1,4 @@
-use datetime::weekday::{Weekday, WeekdayTrait};
+use chrono::prelude::*;
 
 #[test]
 fn test_days_since() {

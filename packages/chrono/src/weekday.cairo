@@ -49,7 +49,8 @@ pub impl WeekdayImpl of WeekdayTrait {
     /// `w`:        | `Mon` | `Tue` | `Wed` | `Thu` | `Fri` | `Sat` | `Sun`
     /// ----------- | ----- | ----- | ----- | ----- | ----- | ----- | -----
     /// `w.succ()`: | `Tue` | `Wed` | `Thu` | `Fri` | `Sat` | `Sun` | `Mon`
-    fn succ(self: @Weekday) -> Weekday {
+    #[inline]
+    const fn succ(self: @Weekday) -> Weekday {
         match self {
             Weekday::Mon => Weekday::Tue,
             Weekday::Tue => Weekday::Wed,
@@ -66,7 +67,8 @@ pub impl WeekdayImpl of WeekdayTrait {
     /// `w`:        | `Mon` | `Tue` | `Wed` | `Thu` | `Fri` | `Sat` | `Sun`
     /// ----------- | ----- | ----- | ----- | ----- | ----- | ----- | -----
     /// `w.pred()`: | `Sun` | `Mon` | `Tue` | `Wed` | `Thu` | `Fri` | `Sat`
-    fn pred(self: @Weekday) -> Weekday {
+    #[inline]
+    const fn pred(self: @Weekday) -> Weekday {
         match self {
             Weekday::Mon => Weekday::Sun,
             Weekday::Tue => Weekday::Mon,
@@ -83,6 +85,7 @@ pub impl WeekdayImpl of WeekdayTrait {
     /// `w`:                      | `Mon` | `Tue` | `Wed` | `Thu` | `Fri` | `Sat` | `Sun`
     /// ------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | -----
     /// `w.number_from_monday()`: | 1     | 2     | 3     | 4     | 5     | 6     | 7
+    #[inline]
     fn number_from_monday(self: @Weekday) -> u32 {
         self.days_since(Weekday::Mon) + 1
     }
@@ -92,6 +95,7 @@ pub impl WeekdayImpl of WeekdayTrait {
     /// `w`:                      | `Mon` | `Tue` | `Wed` | `Thu` | `Fri` | `Sat` | `Sun`
     /// ------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | -----
     /// `w.number_from_sunday()`: | 2     | 3     | 4     | 5     | 6     | 7     | 1
+    #[inline]
     fn number_from_sunday(self: @Weekday) -> u32 {
         self.days_since(Weekday::Sun) + 1
     }
@@ -115,6 +119,7 @@ pub impl WeekdayImpl of WeekdayTrait {
     /// println!("{}", MTWRFSU[today.num_days_from_monday() as usize]);
     /// # }
     /// ```
+    #[inline]
     fn num_days_from_monday(self: @Weekday) -> u32 {
         self.days_since(Weekday::Mon)
     }
@@ -124,6 +129,7 @@ pub impl WeekdayImpl of WeekdayTrait {
     /// `w`:                        | `Mon` | `Tue` | `Wed` | `Thu` | `Fri` | `Sat` | `Sun`
     /// --------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | -----
     /// `w.num_days_from_sunday()`: | 1     | 2     | 3     | 4     | 5     | 6     | 0
+    #[inline]
     fn num_days_from_sunday(self: @Weekday) -> u32 {
         self.days_since(Weekday::Sun)
     }
@@ -145,20 +151,6 @@ pub impl WeekdayImpl of WeekdayTrait {
             7 + lhs - rhs
         } else {
             lhs - rhs
-        }
-    }
-}
-
-impl WeekdayInto of Into<Weekday, u32> {
-    fn into(self: Weekday) -> u32 {
-        match self {
-            Weekday::Mon => 0,
-            Weekday::Tue => 1,
-            Weekday::Wed => 2,
-            Weekday::Thu => 3,
-            Weekday::Fri => 4,
-            Weekday::Sat => 5,
-            Weekday::Sun => 6,
         }
     }
 }
@@ -187,6 +179,7 @@ impl WeekdayDisplay of Display<Weekday> {
 /// [`Weekday::num_days_from_monday`](#method.num_days_from_monday) in this implementation.
 /// Do not heavily depend on this though; use explicit methods whenever possible.
 impl WeekdayTryInto of TryInto<u8, Weekday> {
+    #[inline]
     fn try_into(self: u8) -> Option<Weekday> {
         match self {
             0 => Some(Weekday::Mon),
@@ -197,6 +190,21 @@ impl WeekdayTryInto of TryInto<u8, Weekday> {
             5 => Some(Weekday::Sat),
             6 => Some(Weekday::Sun),
             _ => None,
+        }
+    }
+}
+
+impl WeekdayInto of Into<Weekday, u32> {
+    #[inline]
+    const fn into(self: Weekday) -> u32 {
+        match self {
+            Weekday::Mon => 0,
+            Weekday::Tue => 1,
+            Weekday::Wed => 2,
+            Weekday::Thu => 3,
+            Weekday::Fri => 4,
+            Weekday::Sat => 5,
+            Weekday::Sun => 6,
         }
     }
 }

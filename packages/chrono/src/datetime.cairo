@@ -1,10 +1,14 @@
 use core::fmt::{Debug, Display, Error, Formatter};
 use core::num::traits::Bounded;
-use datetime::date::{Date, DateTrait};
-use datetime::time::{Time, TimeTrait};
-use datetime::time_delta::{TimeDelta, TimeDeltaTrait};
-use datetime::utils::{div_euclid, rem_euclid};
-use datetime::weekday::Weekday;
+use super::date::{Date, DateTrait};
+use super::days::Days;
+use super::isoweek::IsoWeek;
+use super::months::Months;
+use super::time::{Time, TimeTrait};
+use super::time_delta::{TimeDelta, TimeDeltaTrait};
+use super::traits::{Datelike, Timelike};
+use super::utils::{div_euclid, rem_euclid};
+use super::weekday::Weekday;
 
 /// ISO 8601 combined date and time without timezone.
 ///
@@ -32,7 +36,7 @@ use datetime::weekday::Weekday;
 /// assert_eq!(dt.weekday(), Weekday::Fri);
 /// assert_eq!(dt.num_seconds_from_midnight(), 33011);
 /// ```
-#[derive(Copy, PartialEq, Drop)]
+#[derive(Copy, PartialEq, Drop, Serde, starknet::Store)]
 pub struct DateTime {
     pub date: Date,
     pub time: Time,
@@ -56,14 +60,9 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// assert_eq!(dt.date(), d);
     /// assert_eq!(dt.time(), t);
     /// ```
-    fn new(date: Date, time: Time) -> DateTime {
+    #[inline]
+    const fn new(date: Date, time: Time) -> DateTime {
         DateTime { date, time }
-    }
-
-    fn from_ymd_and_hms_opt(
-        year: u32, month: u32, day: u32, hour: u32, min: u32, sec: u32,
-    ) -> Option<DateTime> {
-        DateTrait::from_ymd_opt(year, month, day)?.and_hms_opt(hour, min, sec)
     }
 
     /// Makes a new `NaiveDateTime` corresponding to a UTC date and time,
@@ -82,6 +81,7 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// Panics if the number of seconds would be out of range for a `NaiveDateTime` (more than
     /// ca. 262,000 years away from common era), and panics on an invalid nanosecond (2 seconds or
     /// more).
+    #[inline]
     fn from_timestamp(secs: i64) -> Option<DateTime> {
         let days = div_euclid(secs, 86_400)? + UNIX_EPOCH_DAY;
         let secs = rem_euclid(secs, 86_400);
@@ -94,6 +94,11 @@ pub impl DateTimeImpl of DateTimeTrait {
         Some(date.and_time(time))
     }
 
+    #[inline]
+    fn from_block_timestamp(block_timestamp: u64) -> Option<DateTime> {
+        Self::from_timestamp(block_timestamp.try_into().unwrap())
+    }
+
     /// Retrieves a date component.
     ///
     /// # Example
@@ -104,7 +109,8 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// let dt = NaiveDate::from_ymd_opt(2016, 7, 8).unwrap().and_hms_opt(9, 10, 11).unwrap();
     /// assert_eq!(dt.date(), NaiveDate::from_ymd_opt(2016, 7, 8).unwrap());
     /// ```
-    fn date(self: @DateTime) -> Date {
+    #[inline]
+    const fn date(self: @DateTime) -> Date {
         *self.date
     }
 
@@ -118,7 +124,8 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// let dt = NaiveDate::from_ymd_opt(2016, 7, 8).unwrap().and_hms_opt(9, 10, 11).unwrap();
     /// assert_eq!(dt.time(), NaiveTime::from_hms_opt(9, 10, 11).unwrap());
     /// ```
-    fn time(self: @DateTime) -> Time {
+    #[inline]
+    const fn time(self: @DateTime) -> Time {
         *self.time
     }
 
@@ -137,10 +144,11 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// assert_eq!(DateTime::from_timestamp(dt.timestamp(), dt.timestamp_subsec_nanos()).unwrap(),
     /// dt);
     /// ```
+    #[inline]
     fn timestamp(self: @DateTime) -> i64 {
-        let gregorian_day: i64 = self.date.num_days_from_ce().try_into().unwrap();
-        let seconds_from_midnight = self.time.num_seconds_from_midnight().try_into().unwrap();
-        (gregorian_day - UNIX_EPOCH_DAY) * 86_400 + seconds_from_midnight
+        let gregorian_day = self.date.num_days_from_ce().into();
+        let seconds_from_midnight = self.time.num_seconds_from_midnight();
+        (gregorian_day - UNIX_EPOCH_DAY.into()) * 86_400 + seconds_from_midnight.into()
     }
 
     /// Adds given `TimeDelta` to the current date and time.
@@ -229,6 +237,41 @@ pub impl DateTimeImpl of DateTimeTrait {
         Some(DateTime { date, time })
     }
 
+    /// Adds given `Months` to the current date and time.
+    ///
+    /// Uses the last day of the month if the day does not exist in the resulting month.
+    ///
+    /// # Errors
+    ///
+    /// Returns `None` if the resulting date would be out of range.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Months, NaiveDate};
+    ///
+    /// assert_eq!(
+    ///     NaiveDate::from_ymd_opt(2014, 1, 1)
+    ///         .unwrap()
+    ///         .and_hms_opt(1, 0, 0)
+    ///         .unwrap()
+    ///         .checked_add_months(Months::new(1)),
+    ///     Some(NaiveDate::from_ymd_opt(2014, 2, 1).unwrap().and_hms_opt(1, 0, 0).unwrap())
+    /// );
+    ///
+    /// assert_eq!(
+    ///     NaiveDate::from_ymd_opt(2014, 1, 1)
+    ///         .unwrap()
+    ///         .and_hms_opt(1, 0, 0)
+    ///         .unwrap()
+    ///         .checked_add_months(Months::new(core::i32::MAX as u32 + 1)),
+    ///     None
+    /// );
+    /// ```
+    fn checked_add_months(self: @DateTime, rhs: Months) -> Option<DateTime> {
+        Some(DateTime { date: self.date.checked_add_months(rhs)?, ..*self })
+    }
+
     /// Subtracts given `TimeDelta` from the current date and time.
     ///
     /// As a part of Chrono's [leap second handling](./struct.NaiveTime.html#leap-second-handling),
@@ -311,6 +354,55 @@ pub impl DateTimeImpl of DateTimeTrait {
         Some(DateTime { date, time })
     }
 
+    /// Subtracts given `Months` from the current date and time.
+    ///
+    /// Uses the last day of the month if the day does not exist in the resulting month.
+    ///
+    /// # Errors
+    ///
+    /// Returns `None` if the resulting date would be out of range.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Months, NaiveDate};
+    ///
+    /// assert_eq!(
+    ///     NaiveDate::from_ymd_opt(2014, 1, 1)
+    ///         .unwrap()
+    ///         .and_hms_opt(1, 0, 0)
+    ///         .unwrap()
+    ///         .checked_sub_months(Months::new(1)),
+    ///     Some(NaiveDate::from_ymd_opt(2013, 12, 1).unwrap().and_hms_opt(1, 0, 0).unwrap())
+    /// );
+    ///
+    /// assert_eq!(
+    ///     NaiveDate::from_ymd_opt(2014, 1, 1)
+    ///         .unwrap()
+    ///         .and_hms_opt(1, 0, 0)
+    ///         .unwrap()
+    ///         .checked_sub_months(Months::new(core::i32::MAX as u32 + 1)),
+    ///     None
+    /// );
+    /// ```
+    fn checked_sub_months(self: @DateTime, rhs: Months) -> Option<DateTime> {
+        Some(DateTime { date: self.date.checked_sub_months(rhs)?, ..*self })
+    }
+
+    /// Add a duration in [`Days`] to the date part of the `NaiveDateTime`
+    ///
+    /// Returns `None` if the resulting date would be out of range.
+    fn checked_add_days(self: @DateTime, days: Days) -> Option<DateTime> {
+        Some(DateTime { date: self.date.checked_add_days(days)?, ..*self })
+    }
+
+    /// Subtract a duration in [`Days`] from the date part of the `NaiveDateTime`
+    ///
+    /// Returns `None` if the resulting date would be out of range.
+    fn checked_sub_days(self: @DateTime, days: Days) -> Option<DateTime> {
+        Some(DateTime { date: self.date.checked_sub_days(days)?, ..*self })
+    }
+
     /// Subtracts another `NaiveDateTime` from the current date and time.
     /// This does not overflow or underflow at all.
     ///
@@ -365,9 +457,24 @@ pub impl DateTimeImpl of DateTimeTrait {
             .date
             .signed_duration_since(rhs.date)
             .checked_add(self.time.signed_duration_since(rhs.time))
-            .unwrap()
+            .expect('always in range')
     }
 
+    /// The minimum possible `NaiveDateTime`.
+    const MIN: DateTime = DateTime { date: DateTrait::MIN, time: TimeTrait::MIN };
+
+    /// The maximum possible `NaiveDateTime`.
+    const MAX: DateTime = DateTime { date: DateTrait::MAX, time: TimeTrait::MAX };
+
+    /// The datetime of the Unix Epoch, 1970-01-01 00:00:00.
+    ///
+    /// Note that while this may look like the UNIX epoch, it is missing the
+    /// time zone. The actual UNIX epoch cannot be expressed by this type,
+    /// however it is available as [`DateTime::UNIX_EPOCH`].
+    const UNIX_EPOCH: DateTime = DateTime { date: Date { yof: 16138266 }, time: Time { secs: 0 } };
+}
+
+impl DateTimeDatelikeImpl of Datelike<DateTime> {
     /// Returns the year number in the [calendar date](./struct.NaiveDate.html#calendar-date).
     ///
     /// See also the [`NaiveDate::year`](./struct.NaiveDate.html#method.year) method.
@@ -381,7 +488,8 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
     /// assert_eq!(dt.year(), 2015);
     /// ```
-    fn year(self: @DateTime) -> u32 {
+    #[inline]
+    const fn year(self: @DateTime) -> u32 {
         self.date.year()
     }
 
@@ -400,8 +508,29 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
     /// assert_eq!(dt.month(), 9);
     /// ```
+    #[inline]
     fn month(self: @DateTime) -> u32 {
         self.date.month()
+    }
+
+    /// Returns the month number starting from 0.
+    ///
+    /// The return value ranges from 0 to 11.
+    ///
+    /// See also the [`NaiveDate::month0`] method.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Datelike, NaiveDate, NaiveDateTime};
+    ///
+    /// let dt: NaiveDateTime =
+    ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
+    /// assert_eq!(dt.month0(), 8);
+    /// ```
+    #[inline]
+    fn month0(self: @DateTime) -> u32 {
+        self.date.month0()
     }
 
     /// Returns the day of month starting from 1.
@@ -419,8 +548,29 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
     /// assert_eq!(dt.day(), 25);
     /// ```
+    #[inline]
     fn day(self: @DateTime) -> u32 {
         self.date.day()
+    }
+
+    /// Returns the day of month starting from 0.
+    ///
+    /// The return value ranges from 0 to 30. (The last day of month differs by months.)
+    ///
+    /// See also the [`NaiveDate::day0`] method.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Datelike, NaiveDate, NaiveDateTime};
+    ///
+    /// let dt: NaiveDateTime =
+    ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
+    /// assert_eq!(dt.day0(), 24);
+    /// ```
+    #[inline]
+    fn day0(self: @DateTime) -> u32 {
+        self.date.day0()
     }
 
     /// Returns the day of year starting from 1.
@@ -438,8 +588,29 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
     /// assert_eq!(dt.ordinal(), 268);
     /// ```
-    fn ordinal(self: @DateTime) -> u32 {
+    #[inline]
+    const fn ordinal(self: @DateTime) -> u32 {
         self.date.ordinal()
+    }
+
+    /// Returns the day of year starting from 0.
+    ///
+    /// The return value ranges from 0 to 365. (The last day of year differs by years.)
+    ///
+    /// See also the [`NaiveDate::ordinal0`] method.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Datelike, NaiveDate, NaiveDateTime};
+    ///
+    /// let dt: NaiveDateTime =
+    ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
+    /// assert_eq!(dt.ordinal0(), 267);
+    /// ```
+    #[inline]
+    const fn ordinal0(self: @DateTime) -> u32 {
+        self.date.ordinal0()
     }
 
     /// Returns the day of week.
@@ -455,8 +626,14 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     NaiveDate::from_ymd_opt(2015, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap();
     /// assert_eq!(dt.weekday(), Weekday::Fri);
     /// ```
-    fn weekday(self: @DateTime) -> Weekday {
-        (*self.date).weekday()
+    #[inline]
+    const fn weekday(self: @DateTime) -> Weekday {
+        self.date.weekday()
+    }
+
+    #[inline]
+    fn iso_week(self: @DateTime) -> IsoWeek {
+        self.date.iso_week()
     }
 
     /// Makes a new `NaiveDateTime` with the year number changed, while keeping the same month and
@@ -486,8 +663,9 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     Some(NaiveDate::from_ymd_opt(-308, 9, 25).unwrap().and_hms_opt(12, 34, 56).unwrap())
     /// );
     /// ```
+    #[inline]
     fn with_year(self: @DateTime, year: u32) -> Option<DateTime> {
-        Some(DateTime { date: self.date.with_year(year)?, time: *self.time })
+        self.date.with_year(year).map(|d| DateTime { date: d, ..*self })
     }
 
     /// Makes a new `NaiveDateTime` with the month number (starting from 1) changed.
@@ -516,8 +694,38 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// assert_eq!(dt.with_month(13), None); // No month 13
     /// assert_eq!(dt.with_month(2), None); // No February 30
     /// ```
+    #[inline]
     fn with_month(self: @DateTime, month: u32) -> Option<DateTime> {
-        Some(DateTime { date: self.date.with_month(month)?, time: *self.time })
+        self.date.with_month(month).map(|d| DateTime { date: d, ..*self })
+    }
+
+    /// Makes a new `NaiveDateTime` with the month number (starting from 0) changed.
+    ///
+    /// See also the [`NaiveDate::with_month0`] method.
+    ///
+    /// # Errors
+    ///
+    /// Returns `None` if:
+    /// - The resulting date does not exist (for example `month0(3)` when day of the month is 31).
+    /// - The value for `month0` is invalid.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Datelike, NaiveDate, NaiveDateTime};
+    ///
+    /// let dt: NaiveDateTime =
+    ///     NaiveDate::from_ymd_opt(2015, 9, 30).unwrap().and_hms_opt(12, 34, 56).unwrap();
+    /// assert_eq!(
+    ///     dt.with_month0(9),
+    ///     Some(NaiveDate::from_ymd_opt(2015, 10, 30).unwrap().and_hms_opt(12, 34, 56).unwrap())
+    /// );
+    /// assert_eq!(dt.with_month0(12), None); // No month 13
+    /// assert_eq!(dt.with_month0(1), None); // No February 30
+    /// ```
+    #[inline]
+    fn with_month0(self: @DateTime, month0: u32) -> Option<DateTime> {
+        self.date.with_month0(month0).map(|d| DateTime { date: d, ..*self })
     }
 
     /// Makes a new `NaiveDateTime` with the day of month (starting from 1) changed.
@@ -543,8 +751,37 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// );
     /// assert_eq!(dt.with_day(31), None); // no September 31
     /// ```
+    #[inline]
     fn with_day(self: @DateTime, day: u32) -> Option<DateTime> {
-        Some(DateTime { date: self.date.with_day(day)?, time: *self.time })
+        self.date.with_day(day).map(|d| DateTime { date: d, ..*self })
+    }
+
+    /// Makes a new `NaiveDateTime` with the day of month (starting from 0) changed.
+    ///
+    /// See also the [`NaiveDate::with_day0`] method.
+    ///
+    /// # Errors
+    ///
+    /// Returns `None` if:
+    /// - The resulting date does not exist (for example `day(30)` in April).
+    /// - The value for `day0` is invalid.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Datelike, NaiveDate, NaiveDateTime};
+    ///
+    /// let dt: NaiveDateTime =
+    ///     NaiveDate::from_ymd_opt(2015, 9, 8).unwrap().and_hms_opt(12, 34, 56).unwrap();
+    /// assert_eq!(
+    ///     dt.with_day0(29),
+    ///     Some(NaiveDate::from_ymd_opt(2015, 9, 30).unwrap().and_hms_opt(12, 34, 56).unwrap())
+    /// );
+    /// assert_eq!(dt.with_day0(30), None); // no September 31
+    /// ```
+    #[inline]
+    fn with_day0(self: @DateTime, day0: u32) -> Option<DateTime> {
+        self.date.with_day0(day0).map(|d| DateTime { date: d, ..*self })
     }
 
     /// Makes a new `NaiveDateTime` with the day of year (starting from 1) changed.
@@ -581,10 +818,52 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     Some(NaiveDate::from_ymd_opt(2016, 12, 31).unwrap().and_hms_opt(12, 34, 56).unwrap())
     /// );
     /// ```
+    #[inline]
     fn with_ordinal(self: @DateTime, ordinal: u32) -> Option<DateTime> {
-        Some(DateTime { date: self.date.with_ordinal(ordinal)?, time: *self.time })
+        self.date.with_ordinal(ordinal).map(|d| DateTime { date: d, ..*self })
     }
 
+    /// Makes a new `NaiveDateTime` with the day of year (starting from 0) changed.
+    ///
+    /// See also the [`NaiveDate::with_ordinal0`] method.
+    ///
+    /// # Errors
+    ///
+    /// Returns `None` if:
+    /// - The resulting date does not exist (`with_ordinal0(365)` in a non-leap year).
+    /// - The value for `ordinal0` is invalid.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{Datelike, NaiveDate, NaiveDateTime};
+    ///
+    /// let dt: NaiveDateTime =
+    ///     NaiveDate::from_ymd_opt(2015, 9, 8).unwrap().and_hms_opt(12, 34, 56).unwrap();
+    /// assert_eq!(
+    ///     dt.with_ordinal0(59),
+    ///     Some(NaiveDate::from_ymd_opt(2015, 3, 1).unwrap().and_hms_opt(12, 34, 56).unwrap())
+    /// );
+    /// assert_eq!(dt.with_ordinal0(365), None); // 2015 had only 365 days
+    ///
+    /// let dt: NaiveDateTime =
+    ///     NaiveDate::from_ymd_opt(2016, 9, 8).unwrap().and_hms_opt(12, 34, 56).unwrap();
+    /// assert_eq!(
+    ///     dt.with_ordinal0(59),
+    ///     Some(NaiveDate::from_ymd_opt(2016, 2, 29).unwrap().and_hms_opt(12, 34, 56).unwrap())
+    /// );
+    /// assert_eq!(
+    ///     dt.with_ordinal0(365),
+    ///     Some(NaiveDate::from_ymd_opt(2016, 12, 31).unwrap().and_hms_opt(12, 34, 56).unwrap())
+    /// );
+    /// ```
+    #[inline]
+    fn with_ordinal0(self: @DateTime, ordinal0: u32) -> Option<DateTime> {
+        self.date.with_ordinal0(ordinal0).map(|d| DateTime { date: d, ..*self })
+    }
+}
+
+impl DateTimeTimelikeImpl of Timelike<DateTime> {
     /// Returns the hour number from 0 to 23.
     ///
     /// See also the [`NaiveTime::hour`] method.
@@ -599,7 +878,8 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     789).unwrap();
     /// assert_eq!(dt.hour(), 12);
     /// ```
-    fn hour(self: @DateTime) -> u32 {
+    #[inline]
+    const fn hour(self: @DateTime) -> u32 {
         self.time.hour()
     }
 
@@ -617,7 +897,8 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     789).unwrap();
     /// assert_eq!(dt.minute(), 34);
     /// ```
-    fn minute(self: @DateTime) -> u32 {
+    #[inline]
+    const fn minute(self: @DateTime) -> u32 {
         self.time.minute()
     }
 
@@ -635,7 +916,8 @@ pub impl DateTimeImpl of DateTimeTrait {
     ///     789).unwrap();
     /// assert_eq!(dt.second(), 56);
     /// ```
-    fn second(self: @DateTime) -> u32 {
+    #[inline]
+    const fn second(self: @DateTime) -> u32 {
         self.time.second()
     }
 
@@ -664,8 +946,9 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// );
     /// assert_eq!(dt.with_hour(24), None);
     /// ```
+    #[inline]
     fn with_hour(self: @DateTime, hour: u32) -> Option<DateTime> {
-        Some(DateTime { date: *self.date, time: self.time.with_hour(hour)? })
+        self.time.with_hour(hour).map(|t| DateTime { time: t, ..*self })
     }
 
     /// Makes a new `NaiveDateTime` with the minute number changed.
@@ -695,8 +978,9 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// );
     /// assert_eq!(dt.with_minute(60), None);
     /// ```
+    #[inline]
     fn with_minute(self: @DateTime, min: u32) -> Option<DateTime> {
-        Some(DateTime { date: *self.date, time: self.time.with_minute(min)? })
+        self.time.with_minute(min).map(|t| DateTime { time: t, ..*self })
     }
 
     /// Makes a new `NaiveDateTime` with the second number changed.
@@ -729,22 +1013,10 @@ pub impl DateTimeImpl of DateTimeTrait {
     /// );
     /// assert_eq!(dt.with_second(60), None);
     /// ```
+    #[inline]
     fn with_second(self: @DateTime, sec: u32) -> Option<DateTime> {
-        Some(DateTime { date: *self.date, time: self.time.with_second(sec)? })
+        self.time.with_second(sec).map(|t| DateTime { time: t, ..*self })
     }
-
-    /// The minimum possible `NaiveDateTime`.
-    const MIN: DateTime = DateTime { date: DateTrait::MIN, time: TimeTrait::MIN };
-
-    /// The maximum possible `NaiveDateTime`.
-    const MAX: DateTime = DateTime { date: DateTrait::MAX, time: TimeTrait::MAX };
-
-    /// The datetime of the Unix Epoch, 1970-01-01 00:00:00.
-    ///
-    /// Note that while this may look like the UNIX epoch, it is missing the
-    /// time zone. The actual UNIX epoch cannot be expressed by this type,
-    /// however it is available as [`DateTime::UNIX_EPOCH`].
-    const UNIX_EPOCH: DateTime = DateTime { date: Date { yof: 16138266 }, time: Time { secs: 0 } };
 }
 
 impl DateTimePartialOrd of PartialOrd<DateTime> {
@@ -759,7 +1031,6 @@ impl DateTimePartialOrd of PartialOrd<DateTime> {
             return lhs.time >= rhs.time;
         }
         lhs.date >= rhs.date
-        // lhs.date >= rhs.date && lhs.time >= rhs.time
     }
 }
 

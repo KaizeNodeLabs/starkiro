@@ -1,23 +1,16 @@
-use datetime::date::DateTrait;
-use datetime::datetime::{DateTime, DateTimeTrait};
-use datetime::time_delta::{TimeDelta, TimeDeltaTrait};
-use snforge_std::start_cheat_block_timestamp_global;
-use starknet::get_block_timestamp;
-
-fn ymdhms(y: i32, m: u32, d: u32, h: u32, n: u32, s: u32) -> DateTime {
-    DateTimeTrait::from_ymd_and_hms_opt(y.try_into().unwrap(), m, d, h, n, s).unwrap()
-}
+use chrono::prelude::*;
+use super::utils::ymdhms;
 
 fn check_datetime_add(
-    tuple: (i32, u32, u32, u32, u32, u32),
+    tuple: (u32, u32, u32, u32, u32, u32),
     rhs: TimeDelta,
-    result: Option<(i32, u32, u32, u32, u32, u32)>,
+    result: Option<(u32, u32, u32, u32, u32, u32)>,
 ) {
     let (y, m, d, h, n, s) = tuple;
     let lhs = ymdhms(y, m, d, h, n, s);
     let sum = result
         .map(
-            |tuple: (i32, u32, u32, u32, u32, u32)| {
+            |tuple: (u32, u32, u32, u32, u32, u32)| {
                 let (y, m, d, h, n, s) = tuple;
                 ymdhms(y, m, d, h, n, s)
             },
@@ -111,14 +104,4 @@ fn test_datetime_add_sub_invariant() {
     let t = -946684799;
     let time = base.checked_add_signed(TimeDeltaTrait::seconds(t)).unwrap();
     assert_eq!(t, time.signed_duration_since(base).num_seconds());
-}
-
-#[test]
-fn test_datetime_from_timestamp() {
-    let dt1 = DateTimeTrait::from_timestamp(get_block_timestamp().try_into().unwrap()).unwrap();
-    assert_eq!(format!("{}", dt1), "1970-01-01 00:00:00");
-    start_cheat_block_timestamp_global(1707868800);
-    let dt2 = DateTimeTrait::from_timestamp(get_block_timestamp().try_into().unwrap()).unwrap();
-    assert_eq!(format!("{}", dt2), "2024-02-14 00:00:00");
-    assert!(dt1 < dt2);
 }

@@ -1,10 +1,6 @@
+use chrono::prelude::*;
 use core::num::traits::Bounded;
-use datetime::time::{Time, TimeTrait};
-use datetime::time_delta::{TimeDelta, TimeDeltaTrait};
-
-fn hms(h: u32, m: u32, s: u32) -> Time {
-    TimeTrait::from_hms_opt(h, m, s).unwrap()
-}
+use super::utils::hms;
 
 #[test]
 fn test_time_hms() {

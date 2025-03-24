@@ -1,7 +1,6 @@
+use chrono::prelude::*;
 use core::num::traits::Bounded;
-use datetime::date::DateTrait;
-use datetime::datetime::DateTimeTrait;
-use datetime::month::{Month, MonthTrait, MonthsTrait};
+use super::utils::ymdhms;
 
 #[test]
 fn test_month_enum_try_from() {
@@ -11,14 +10,11 @@ fn test_month_enum_try_from() {
     let month_opt: Option<Month> = 13_u8.try_into();
     assert_eq!(month_opt, None);
 
-    let date = DateTrait::from_ymd_opt(2019, 10, 28).unwrap().and_hms_opt(9, 10, 11).unwrap();
+    let date = ymdhms(2019, 10, 28, 9, 10, 11);
     let month_u8: u8 = date.month().try_into().unwrap();
     assert_eq!(month_u8.try_into(), Some(Month::October));
     let month = Month::January;
-    let dt = DateTrait::from_ymd_opt(2019, month.number_from_month(), 28)
-        .unwrap()
-        .and_hms_opt(9, 10, 11)
-        .unwrap();
+    let dt = ymdhms(2019, month.number_from_month(), 28, 9, 10, 11);
     assert_eq!((dt.year(), dt.month(), dt.day()), (2019, 1, 28));
 }
 
@@ -33,12 +29,11 @@ fn test_month_enum_primitive_parse() {
     assert_eq!(dec_opt, Some(Month::December));
     assert_eq!(no_month, None);
 
-    let date = DateTimeTrait::from_ymd_and_hms_opt(2019, 10, 28, 9, 10, 11).unwrap();
+    let date = ymdhms(2019, 10, 28, 9, 10, 11);
     assert_eq!(MonthTrait::from_u32(date.month()), Some(Month::October));
 
     let month = Month::January;
-    let dt = DateTimeTrait::from_ymd_and_hms_opt(2019, month.number_from_month(), 28, 9, 10, 11)
-        .unwrap();
+    let dt = ymdhms(2019, month.number_from_month(), 28, 9, 10, 11);
     assert_eq!((dt.year(), dt.month(), dt.day()), (2019, 1, 28));
 }
 
@@ -52,11 +47,11 @@ fn test_month_enum_succ_pred() {
 
 #[test]
 fn test_month_partial_ord() {
-    assert!(Month::January <= Month::January);
-    assert!(Month::January < Month::February);
-    assert!(Month::January < Month::December);
-    assert!(Month::July >= Month::May);
-    assert!(Month::September > Month::March);
+    assert_le!(Month::January, Month::January);
+    assert_lt!(Month::January, Month::February);
+    assert_lt!(Month::January, Month::December);
+    assert_ge!(Month::July, Month::May);
+    assert_gt!(Month::September, Month::March);
 }
 
 #[test]

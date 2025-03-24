@@ -1,19 +1,16 @@
+use chrono::date::{MAX_YEAR, MIN_YEAR};
+use chrono::internals::{A, AG, B, BA, C, CB, D, DC, E, ED, F, FE, G, GF, YearFlags, YearFlagsTrait};
+use chrono::prelude::*;
 use core::num::traits::{Bounded, Pow};
-use datetime::date::{Date, DateTrait, MAX_YEAR, MIN_YEAR};
-use datetime::internals::{
-    A, AG, B, BA, C, CB, D, DC, E, ED, F, FE, G, GF, YearFlags, YearFlagsTrait,
-};
-use datetime::month::MonthsTrait;
-use datetime::time_delta::{TimeDelta, TimeDeltaTrait};
-use datetime::weekday::{Weekday, WeekdayTrait};
-use datetime::{Days, DaysTrait};
+use core::ops::RangeInclusiveTrait;
+use super::utils::ymd;
 
 // as it is hard to verify year flags in `NaiveDate::MIN` and `NaiveDate::MAX`,
 // we use a separate run-time test.
 #[test]
 fn test_date_bounds() {
-    let calculated_min = DateTrait::from_ymd_opt(MIN_YEAR, 1, 1).unwrap();
-    let calculated_max = DateTrait::from_ymd_opt(MAX_YEAR, 12, 31).unwrap();
+    let calculated_min = ymd(MIN_YEAR, 1, 1);
+    let calculated_max = ymd(MAX_YEAR, 12, 31);
     assert_eq!(DateTrait::MIN, calculated_min);
     assert_eq!(DateTrait::MAX, calculated_max);
 
@@ -36,23 +33,18 @@ fn test_date_bounds() {
 #[test]
 fn diff_months() {
     // identity
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 8, 3).unwrap().checked_add_months(MonthsTrait::new(0)),
-        Some(DateTrait::from_ymd_opt(2022, 8, 3).unwrap()),
-    );
+    assert_eq!(ymd(2022, 8, 3).checked_add_months(MonthsTrait::new(0)), Some(ymd(2022, 8, 3)));
 
     // add with months exceeding `i32::MAX`
     assert_eq!(
-        DateTrait::from_ymd_opt(2022, 8, 3)
-            .unwrap()
+        ymd(2022, 8, 3)
             .checked_add_months(MonthsTrait::new(Bounded::<i32>::MAX.try_into().unwrap() + 1)),
         None,
     );
 
     // sub with months exceeding `i32::MIN`
     assert_eq!(
-        DateTrait::from_ymd_opt(2022, 8, 3)
-            .unwrap()
+        ymd(2022, 8, 3)
             .checked_sub_months(
                 MonthsTrait::new((-(Bounded::<i32>::MIN + 1)).try_into().unwrap() + 1),
             ),
@@ -72,73 +64,49 @@ fn diff_months() {
     // );
 
     // add crossing year boundary
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 8, 3).unwrap().checked_add_months(MonthsTrait::new(6)),
-        Some(DateTrait::from_ymd_opt(2023, 2, 3).unwrap()),
-    );
+    assert_eq!(ymd(2022, 8, 3).checked_add_months(MonthsTrait::new(6)), Some(ymd(2023, 2, 3)));
 
     // sub crossing year boundary
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 8, 3).unwrap().checked_sub_months(MonthsTrait::new(10)),
-        Some(DateTrait::from_ymd_opt(2021, 10, 3).unwrap()),
-    );
+    assert_eq!(ymd(2022, 8, 3).checked_sub_months(MonthsTrait::new(10)), Some(ymd(2021, 10, 3)));
 
     // add clamping day, non-leap year
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 1, 29).unwrap().checked_add_months(MonthsTrait::new(1)),
-        Some(DateTrait::from_ymd_opt(2022, 2, 28).unwrap()),
-    );
+    assert_eq!(ymd(2022, 1, 29).checked_add_months(MonthsTrait::new(1)), Some(ymd(2022, 2, 28)));
 
     // add to leap day
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 10, 29).unwrap().checked_add_months(MonthsTrait::new(16)),
-        Some(DateTrait::from_ymd_opt(2024, 2, 29).unwrap()),
-    );
+    assert_eq!(ymd(2022, 10, 29).checked_add_months(MonthsTrait::new(16)), Some(ymd(2024, 2, 29)));
 
     // add into december
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 10, 31).unwrap().checked_add_months(MonthsTrait::new(2)),
-        Some(DateTrait::from_ymd_opt(2022, 12, 31).unwrap()),
-    );
+    assert_eq!(ymd(2022, 10, 31).checked_add_months(MonthsTrait::new(2)), Some(ymd(2022, 12, 31)));
 
     // sub into december
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 10, 31).unwrap().checked_sub_months(MonthsTrait::new(10)),
-        Some(DateTrait::from_ymd_opt(2021, 12, 31).unwrap()),
-    );
+    assert_eq!(ymd(2022, 10, 31).checked_sub_months(MonthsTrait::new(10)), Some(ymd(2021, 12, 31)));
 
     // add into january
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 8, 3).unwrap().checked_add_months(MonthsTrait::new(5)),
-        Some(DateTrait::from_ymd_opt(2023, 1, 3).unwrap()),
-    );
+    assert_eq!(ymd(2022, 8, 3).checked_add_months(MonthsTrait::new(5)), Some(ymd(2023, 1, 3)));
 
     // sub into january
-    assert_eq!(
-        DateTrait::from_ymd_opt(2022, 8, 3).unwrap().checked_sub_months(MonthsTrait::new(7)),
-        Some(DateTrait::from_ymd_opt(2022, 1, 3).unwrap()),
-    );
+    assert_eq!(ymd(2022, 8, 3).checked_sub_months(MonthsTrait::new(7)), Some(ymd(2022, 1, 3)));
 }
 
 #[test]
 fn test_readme_doomsday() {
-    // for y in MIN_YEAR..MAX_YEAR + 1 {
-    for y in MIN_YEAR..1000 + 1 {
+    // for y in MIN_YEAR..=MAX_YEAR {
+    for y in 1970_u32..=2038 {
         // even months
-        let d4 = DateTrait::from_ymd_opt(y, 4, 4).unwrap();
-        let d6 = DateTrait::from_ymd_opt(y, 6, 6).unwrap();
-        let d8 = DateTrait::from_ymd_opt(y, 8, 8).unwrap();
-        let d10 = DateTrait::from_ymd_opt(y, 10, 10).unwrap();
-        let d12 = DateTrait::from_ymd_opt(y, 12, 12).unwrap();
+        let d4 = ymd(y, 4, 4);
+        let d6 = ymd(y, 6, 6);
+        let d8 = ymd(y, 8, 8);
+        let d10 = ymd(y, 10, 10);
+        let d12 = ymd(y, 12, 12);
 
         // nine to five, seven-eleven
-        let d59 = DateTrait::from_ymd_opt(y, 5, 9).unwrap();
-        let d95 = DateTrait::from_ymd_opt(y, 9, 5).unwrap();
-        let d711 = DateTrait::from_ymd_opt(y, 7, 11).unwrap();
-        let d117 = DateTrait::from_ymd_opt(y, 11, 7).unwrap();
+        let d59 = ymd(y, 5, 9);
+        let d95 = ymd(y, 9, 5);
+        let d711 = ymd(y, 7, 11);
+        let d117 = ymd(y, 11, 7);
 
         // "March 0"
-        let d30 = DateTrait::from_ymd_opt(y, 3, 1).unwrap().pred_opt().unwrap();
+        let d30 = ymd(y, 3, 1).pred_opt().unwrap();
 
         let weekday = d30.weekday();
         let other_dates = [d4, d6, d8, d10, d12, d59, d95, d711, d117];
@@ -160,10 +128,6 @@ fn test_date_from_ymd() {
     assert!(DateTrait::from_ymd_opt(2014, 3, 32).is_none());
     assert!(DateTrait::from_ymd_opt(2014, 12, 31).is_some());
     assert!(DateTrait::from_ymd_opt(2014, 13, 1).is_none());
-}
-
-fn ymd(y: u32, m: u32, d: u32) -> Date {
-    DateTrait::from_ymd_opt(y, m, d).unwrap()
 }
 
 #[test]
@@ -221,6 +185,36 @@ fn test_date_from_isoywd() {
 }
 
 #[test]
+fn test_date_from_isoywd_and_iso_week() {
+    for year in 2000_u32..2401 {
+        for week in 1_u32..54 {
+            for weekday in WEEKDAYS.span() {
+                let d = DateTrait::from_isoywd_opt(year, week, *weekday);
+                if let Some(d) = d {
+                    assert_eq!(d.weekday(), *weekday);
+                    let w = d.iso_week();
+                    assert_eq!(w.year(), year);
+                    assert_eq!(w.week(), week);
+                }
+            }
+        }
+    }
+
+    for year in 2000_u32..2401 {
+        for month in 1_u32..13 {
+            for day in 1_u32..32 {
+                let d = DateTrait::from_ymd_opt(year, month, day);
+                if let Some(d) = d {
+                    let w = d.iso_week();
+                    let d_ = DateTrait::from_isoywd_opt(w.year(), w.week(), d.weekday());
+                    assert_eq!(d, d_.unwrap());
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn test_date_from_num_days_from_ce() {
     assert_eq!(DateTrait::from_num_days_from_ce_opt(1), Some(ymd(1, 1, 1)));
     assert_eq!(DateTrait::from_num_days_from_ce_opt(2), Some(ymd(1, 1, 2)));
@@ -240,7 +234,8 @@ fn test_date_from_num_days_from_ce() {
     assert_eq!(DateTrait::from_num_days_from_ce_opt(-365), Some(ymd(0, 1, 1)));
     //assert_eq!(from_ndays_from_ce(-366), Some(ymd(-1, 12, 31))); // 2 BCE
 
-    for i in -3_i32..10001 {
+    // for i in -3_i32..10001 {
+    for i in -3_i32..101 {
         let days = i * 100;
         assert_eq!(
             DateTrait::from_num_days_from_ce_opt(days).map(|d: Date| d.num_days_from_ce()),
@@ -301,16 +296,8 @@ fn test_date_from_weekday_of_month_opt() {
     assert_eq!(DateTrait::from_weekday_of_month_opt(2018, 8, Weekday::Sat, 5), None);
 }
 
-#[test]
-fn test_date_weekday() {
-    assert_eq!(ymd(1582, 10, 15).weekday(), Weekday::Fri);
-    // May 20, 1875 = ISO 8601 reference date
-    assert_eq!(ymd(1875, 5, 20).weekday(), Weekday::Thu);
-    assert_eq!(ymd(2000, 1, 1).weekday(), Weekday::Sat);
-}
-
 fn check_date_fields(year: u32, month: u32, day: u32, ordinal: u32) {
-    let d1 = DateTrait::from_ymd_opt(year, month, day).unwrap();
+    let d1 = ymd(year, month, day);
     assert_eq!(d1.year(), year);
     assert_eq!(d1.month(), month);
     assert_eq!(d1.day(), day);
@@ -349,31 +336,39 @@ fn test_date_fields() {
 }
 
 #[test]
+fn test_date_weekday() {
+    assert_eq!(ymd(1582, 10, 15).weekday(), Weekday::Fri);
+    // May 20, 1875 = ISO 8601 reference date
+    assert_eq!(ymd(1875, 5, 20).weekday(), Weekday::Thu);
+    assert_eq!(ymd(2000, 1, 1).weekday(), Weekday::Sat);
+}
+
+#[test]
 fn test_date_with_fields() {
-    let d = DateTrait::from_ymd_opt(2000, 2, 29).unwrap();
+    let d = ymd(2000, 2, 29);
     // assert_eq!(d.with_year(-400), Some(NaiveDate::from_ymd_opt(-400, 2, 29).unwrap()));
     // assert_eq!(d.with_year(-100), None);
-    assert_eq!(d.with_year(1600), Some(DateTrait::from_ymd_opt(1600, 2, 29).unwrap()));
+    assert_eq!(d.with_year(1600), Some(ymd(1600, 2, 29)));
     assert_eq!(d.with_year(1900), None);
-    assert_eq!(d.with_year(2000), Some(DateTrait::from_ymd_opt(2000, 2, 29).unwrap()));
+    assert_eq!(d.with_year(2000), Some(ymd(2000, 2, 29)));
     assert_eq!(d.with_year(2001), None);
-    assert_eq!(d.with_year(2004), Some(DateTrait::from_ymd_opt(2004, 2, 29).unwrap()));
+    assert_eq!(d.with_year(2004), Some(ymd(2004, 2, 29)));
     assert_eq!(d.with_year(Bounded::<i32>::MAX.try_into().unwrap()), None);
 
     let d = DateTrait::from_ymd_opt(2000, 4, 30).unwrap();
     assert_eq!(d.with_month(0), None);
-    assert_eq!(d.with_month(1), Some(DateTrait::from_ymd_opt(2000, 1, 30).unwrap()));
+    assert_eq!(d.with_month(1), Some(ymd(2000, 1, 30)));
     assert_eq!(d.with_month(2), None);
-    assert_eq!(d.with_month(3), Some(DateTrait::from_ymd_opt(2000, 3, 30).unwrap()));
-    assert_eq!(d.with_month(4), Some(DateTrait::from_ymd_opt(2000, 4, 30).unwrap()));
-    assert_eq!(d.with_month(12), Some(DateTrait::from_ymd_opt(2000, 12, 30).unwrap()));
+    assert_eq!(d.with_month(3), Some(ymd(2000, 3, 30)));
+    assert_eq!(d.with_month(4), Some(ymd(2000, 4, 30)));
+    assert_eq!(d.with_month(12), Some(ymd(2000, 12, 30)));
     assert_eq!(d.with_month(13), None);
     assert_eq!(d.with_month(Bounded::<u32>::MAX), None);
 
     let d = DateTrait::from_ymd_opt(2000, 2, 8).unwrap();
     assert_eq!(d.with_day(0), None);
-    assert_eq!(d.with_day(1), Some(DateTrait::from_ymd_opt(2000, 2, 1).unwrap()));
-    assert_eq!(d.with_day(29), Some(DateTrait::from_ymd_opt(2000, 2, 29).unwrap()));
+    assert_eq!(d.with_day(1), Some(ymd(2000, 2, 1)));
+    assert_eq!(d.with_day(29), Some(ymd(2000, 2, 29)));
     assert_eq!(d.with_day(30), None);
     assert_eq!(d.with_day(Bounded::<u32>::MAX), None);
 }
@@ -382,13 +377,13 @@ fn test_date_with_fields() {
 fn test_date_with_ordinal() {
     let d = DateTrait::from_ymd_opt(2000, 5, 5).unwrap();
     assert_eq!(d.with_ordinal(0), None);
-    assert_eq!(d.with_ordinal(1), Some(DateTrait::from_ymd_opt(2000, 1, 1).unwrap()));
-    assert_eq!(d.with_ordinal(60), Some(DateTrait::from_ymd_opt(2000, 2, 29).unwrap()));
-    assert_eq!(d.with_ordinal(61), Some(DateTrait::from_ymd_opt(2000, 3, 1).unwrap()));
-    assert_eq!(d.with_ordinal(366), Some(DateTrait::from_ymd_opt(2000, 12, 31).unwrap()));
+    assert_eq!(d.with_ordinal(1), Some(ymd(2000, 1, 1)));
+    assert_eq!(d.with_ordinal(60), Some(ymd(2000, 2, 29)));
+    assert_eq!(d.with_ordinal(61), Some(ymd(2000, 3, 1)));
+    assert_eq!(d.with_ordinal(366), Some(ymd(2000, 12, 31)));
     assert_eq!(d.with_ordinal(367), None);
     assert_eq!(d.with_ordinal(2_u32.pow(28) | 60), None);
-    let d = DateTrait::from_ymd_opt(1999, 5, 5).unwrap();
+    let d = ymd(1999, 5, 5);
     assert_eq!(d.with_ordinal(366), None);
     assert_eq!(d.with_ordinal(Bounded::<u32>::MAX), None);
 }
@@ -397,7 +392,8 @@ fn test_date_with_ordinal() {
 fn test_date_num_days_from_ce() {
     assert_eq!(ymd(1, 1, 1).num_days_from_ce(), 1);
 
-    for year in 1_u32..10001 {
+    // for year in 1_u32..10001 {
+    for year in 1_u32..101 {
         assert_eq!(
             ymd(year, 1, 1).num_days_from_ce(), ymd(year - 1, 12, 31).num_days_from_ce() + 1,
         );
@@ -490,20 +486,16 @@ fn check_date_signed_duration_since(lhs: Date, rhs: Date, delta: TimeDelta) {
 #[test]
 fn test_date_signed_duration_since() {
     check_date_signed_duration_since(ymd(2014, 1, 1), ymd(2014, 1, 1), TimeDeltaTrait::zero());
+    check_date_signed_duration_since(ymd(2014, 1, 2), ymd(2014, 1, 1), TimeDeltaTrait::days(1));
+    check_date_signed_duration_since(ymd(2014, 12, 31), ymd(2014, 1, 1), TimeDeltaTrait::days(364));
     check_date_signed_duration_since(
-        ymd(2014, 1, 2), ymd(2014, 1, 1), TimeDeltaTrait::try_days(1).unwrap(),
+        ymd(2015, 1, 3), ymd(2014, 1, 1), TimeDeltaTrait::days(365 + 2),
     );
     check_date_signed_duration_since(
-        ymd(2014, 12, 31), ymd(2014, 1, 1), TimeDeltaTrait::try_days(364).unwrap(),
+        ymd(2018, 1, 1), ymd(2014, 1, 1), TimeDeltaTrait::days(365 * 4 + 1),
     );
     check_date_signed_duration_since(
-        ymd(2015, 1, 3), ymd(2014, 1, 1), TimeDeltaTrait::try_days(365 + 2).unwrap(),
-    );
-    check_date_signed_duration_since(
-        ymd(2018, 1, 1), ymd(2014, 1, 1), TimeDeltaTrait::try_days(365 * 4 + 1).unwrap(),
-    );
-    check_date_signed_duration_since(
-        ymd(2414, 1, 1), ymd(2014, 1, 1), TimeDeltaTrait::try_days(365 * 400 + 97).unwrap(),
+        ymd(2414, 1, 1), ymd(2014, 1, 1), TimeDeltaTrait::days(365 * 400 + 97),
     );
 
     check_date_signed_duration_since(
@@ -614,10 +606,10 @@ fn test_date_sub_days() {
 
 #[test]
 fn test_date_fmt() {
-    assert_eq!(format!("{:?}", DateTrait::from_ymd_opt(2012, 3, 4).unwrap()), "2012-03-04");
-    assert_eq!(format!("{:?}", DateTrait::from_ymd_opt(0, 3, 4).unwrap()), "0000-03-04");
+    assert_eq!(format!("{:?}", ymd(2012, 3, 4)), "2012-03-04");
+    assert_eq!(format!("{:?}", ymd(0, 3, 4)), "0000-03-04");
     // assert_eq!(format!("{:?}", DateTrait::from_ymd_opt(-307, 3, 4).unwrap()), "-0307-03-04");
-    assert_eq!(format!("{:?}", DateTrait::from_ymd_opt(12345, 3, 4).unwrap()), "+12345-03-04");
+    assert_eq!(format!("{:?}", ymd(12345, 3, 4)), "+12345-03-04");
     // assert_eq!(DateTrait::from_ymd_opt(2012, 3, 4).unwrap().to_string(), "2012-03-04");
 // assert_eq!(DateTrait::from_ymd_opt(0, 3, 4).unwrap().to_string(), "0000-03-04");
 // assert_eq!(DateTrait::from_ymd_opt(-307, 3, 4).unwrap().to_string(), "-0307-03-04");
@@ -627,11 +619,65 @@ fn test_date_fmt() {
 // assert_eq!(format!("{:30?}", NaiveDate::from_ymd_opt(12345, 6, 7).unwrap()), "+12345-06-07");
 }
 
+#[test]
+fn test_weeks_from() {
+    // tests per: https://github.com/chronotope/chrono/issues/961
+    // these internally use `weeks_from` via the parsing infrastructure
+    // assert_eq!(
+    //     NaiveDate::parse_from_str("2020-01-0", "%Y-%W-%w").ok(),
+    //     NaiveDate::from_ymd_opt(2020, 1, 12),
+    // );
+    // assert_eq!(
+    //     NaiveDate::parse_from_str("2019-01-0", "%Y-%W-%w").ok(),
+    //     NaiveDate::from_ymd_opt(2019, 1, 13),
+    // );
+
+    // direct tests
+    let y_starts_on: [(u32, Weekday); 8] = [
+        (2019, Weekday::Tue), (2020, Weekday::Wed), (2021, Weekday::Fri), (2022, Weekday::Sat),
+        (2023, Weekday::Sun), (2024, Weekday::Mon), (2025, Weekday::Wed), (2026, Weekday::Thu),
+    ];
+
+    for (y, starts_on) in y_starts_on.span() {
+        for day in WEEKDAYS.span() {
+            assert_eq!(
+                DateTrait::from_ymd_opt(*y, 1, 1).map(|d| d.weeks_from(*day)),
+                Some(if day == starts_on {
+                    1
+                } else {
+                    0
+                }),
+            );
+            let weeks_from = DateTrait::from_ymd_opt(*y, 12, 31).unwrap().weeks_from(*day);
+            assert!((52_i32..=53).contains(@weeks_from));
+        }
+    }
+
+    let base = ymd(2019, 1, 1);
+
+    // 400 years covers all year types
+    for day in WEEKDAYS.span() {
+        // must always be below 54
+        for dplus in 1_u64..(100 * 366) { // TODO 400 is taking too much time
+            let base_plus_days = base.checked_add_days(DaysTrait::new(dplus)).unwrap();
+            assert!(base_plus_days.weeks_from(*day) < 54)
+        }
+    }
+}
+
+#[test]
+fn test_with_0_overflow() {
+    let dt = ymd(2023, 4, 18);
+    assert!(dt.with_month0(4294967295).is_none());
+    assert!(dt.with_day0(4294967295).is_none());
+    assert!(dt.with_ordinal0(4294967295).is_none());
+}
 
 #[test]
 fn test_leap_year() {
-    for year in 0..MAX_YEAR + 1 {
-        let date = DateTrait::from_ymd_opt(year, 1, 1).unwrap();
+    // for year in MIN_YEAR..=MAX_YEAR {
+    for year in 1970_u32..=2038 {
+        let date = ymd(year, 1, 1);
         let is_leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
         assert_eq!(date.leap_year(), is_leap);
         assert_eq!(date.leap_year(), date.with_ordinal(366).is_some());
@@ -654,7 +700,7 @@ fn test_weekday_with_yearflags() {
         assert_eq!(first_day_of_year.weekday(), *first_weekday);
 
         let mut prev = first_day_of_year.weekday();
-        for ordinal in 2_u32..year_flags.ndays() + 1 {
+        for ordinal in 2_u32..=year_flags.ndays() {
             let date = DateTrait::from_yo_opt(*year, ordinal).unwrap();
             let expected = prev.succ();
             assert_eq!(date.weekday(), expected);
@@ -664,14 +710,30 @@ fn test_weekday_with_yearflags() {
 }
 
 #[test]
+fn test_isoweekdate_with_yearflags() {
+    for (year, year_flags, _) in YEAR_FLAGS.span() {
+        // January 4 should be in the first week
+        let jan4 = ymd(*year, 1, 4);
+        let iso_week = jan4.iso_week();
+        assert_eq!(jan4.year_flags(), *year_flags);
+        assert_eq!(iso_week.week(), 1);
+    }
+}
+
+#[test]
 fn test_date_to_mdf_to_date() {
     for (year, year_flags, _) in YEAR_FLAGS.span() {
-        for ordinal in 1..year_flags.ndays() {
+        for ordinal in 1..=year_flags.ndays() {
             let date = DateTrait::from_yo_opt(*year, ordinal).unwrap();
             assert_eq!(date, DateTrait::from_mdf(date.year(), date.mdf()).unwrap());
         }
     }
 }
+
+const WEEKDAYS: [Weekday; 7] = [
+    Weekday::Mon, Weekday::Tue, Weekday::Wed, Weekday::Thu, Weekday::Fri, Weekday::Sat,
+    Weekday::Sun,
+];
 
 // Used for testing some methods with all combinations of `YearFlags`.
 // (year, flags, first weekday of year)

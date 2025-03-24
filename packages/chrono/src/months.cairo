@@ -1,5 +1,5 @@
 use core::fmt::{Debug, Display, Error, Formatter};
-use datetime::date::DateTrait;
+use super::date::DateTrait;
 
 /// The month of the year.
 ///
@@ -59,7 +59,8 @@ pub impl MonthImpl of MonthTrait {
     /// `m`:        | `January`  | `February` | `...` | `December`
     /// ----------- | ---------  | ---------- | --- | ---------
     /// `m.succ()`: | `February` | `March`    | `...` | `January`
-    fn succ(self: @Month) -> Month {
+    #[inline]
+    const fn succ(self: @Month) -> Month {
         match self {
             Month::January => Month::February,
             Month::February => Month::March,
@@ -81,7 +82,8 @@ pub impl MonthImpl of MonthTrait {
     /// `m`:        | `January`  | `February` | `...` | `December`
     /// ----------- | ---------  | ---------- | --- | ---------
     /// `m.pred()`: | `December` | `January`  | `...` | `November`
-    fn pred(self: @Month) -> Month {
+    #[inline]
+    const fn pred(self: @Month) -> Month {
         match self {
             Month::January => Month::December,
             Month::February => Month::January,
@@ -103,7 +105,8 @@ pub impl MonthImpl of MonthTrait {
     /// `m`:                     | `January` | `February` | `...` | `December`
     /// -------------------------| --------- | ---------- | --- | -----
     /// `m.number_from_month()`: | 1         | 2          | `...` | 12
-    fn number_from_month(self: @Month) -> u32 {
+    #[inline]
+    const fn number_from_month(self: @Month) -> u32 {
         match self {
             Month::January => 1,
             Month::February => 2,
@@ -117,6 +120,30 @@ pub impl MonthImpl of MonthTrait {
             Month::October => 10,
             Month::November => 11,
             Month::December => 12,
+        }
+    }
+
+    /// Get the name of the month
+    ///
+    /// ```
+    /// use chrono::Month;
+    ///
+    /// assert_eq!(Month::January.name(), "January")
+    /// ```
+    const fn name(self: @Month) -> felt252 {
+        match *self {
+            Month::January => 'January',
+            Month::February => 'February',
+            Month::March => 'March',
+            Month::April => 'April',
+            Month::May => 'May',
+            Month::June => 'June',
+            Month::July => 'July',
+            Month::August => 'August',
+            Month::September => 'September',
+            Month::October => 'October',
+            Month::November => 'November',
+            Month::December => 'December',
         }
     }
 
@@ -145,14 +172,17 @@ pub impl MonthImpl of MonthTrait {
         )
     }
 
+    #[inline]
     fn from_u64(n: u64) -> Option<Month> {
         Self::from_u32(n.try_into().unwrap())
     }
 
+    #[inline]
     fn from_i64(n: i64) -> Option<Month> {
         Self::from_u32(n.try_into().unwrap())
     }
 
+    #[inline]
     fn from_u32(n: u32) -> Option<Month> {
         match n {
             0 => None,
@@ -174,9 +204,11 @@ pub impl MonthImpl of MonthTrait {
 }
 
 impl MonthPartialOrd of PartialOrd<Month> {
+    #[inline]
     fn lt(lhs: Month, rhs: Month) -> bool {
         lhs.number_from_month() < rhs.number_from_month()
     }
+    #[inline]
     fn ge(lhs: Month, rhs: Month) -> bool {
         lhs.number_from_month() >= rhs.number_from_month()
     }
@@ -184,22 +216,7 @@ impl MonthPartialOrd of PartialOrd<Month> {
 
 impl MonthTryInto of TryInto<u8, Month> {
     fn try_into(self: u8) -> Option<Month> {
-        match self {
-            0 => None,
-            1 => Some(Month::January),
-            2 => Some(Month::February),
-            3 => Some(Month::March),
-            4 => Some(Month::April),
-            5 => Some(Month::May),
-            6 => Some(Month::June),
-            7 => Some(Month::July),
-            8 => Some(Month::August),
-            9 => Some(Month::September),
-            10 => Some(Month::October),
-            11 => Some(Month::November),
-            12 => Some(Month::December),
-            _ => None,
-        }
+        MonthTrait::from_u32(self.into())
     }
 }
 
@@ -237,20 +254,23 @@ pub struct Months {
 #[generate_trait]
 pub impl MonthsImpl of MonthsTrait {
     /// Construct a new `Months` from a number of months
-    fn new(months: u32) -> Months {
+    const fn new(months: u32) -> Months {
         Months { months }
     }
 
     /// Returns the total number of months in the `Months` instance.
-    fn as_u32(self: @Months) -> u32 {
+    #[inline]
+    const fn as_u32(self: @Months) -> u32 {
         *self.months
     }
 }
 
 impl MonthsPartialOrd of PartialOrd<Months> {
+    #[inline]
     fn lt(lhs: Months, rhs: Months) -> bool {
         lhs.months < rhs.months
     }
+    #[inline]
     fn ge(lhs: Months, rhs: Months) -> bool {
         lhs.months >= rhs.months
     }

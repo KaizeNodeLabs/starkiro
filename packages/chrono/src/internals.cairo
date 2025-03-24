@@ -1,7 +1,7 @@
-use core::num::traits::Pow;
-use datetime::utils::{rem_euclid, ushl, ushr};
-
 //! Internal helper types for working with dates.
+
+use core::num::traits::Pow;
+use super::utils::{rem_euclid, u32_shl, u32_shr};
 
 /// Year flags (aka the dominical letter).
 ///
@@ -15,7 +15,7 @@ use datetime::utils::{rem_euclid, ushl, ushr};
 /// `Weekday` of the last day in the preceding year.
 #[derive(Clone, Copy, PartialEq, Drop, Debug)]
 pub struct YearFlags {
-    pub flags: u8,
+    pub(crate) flags: u8,
 }
 
 // Weekday of the last day in the preceding year.
@@ -68,20 +68,23 @@ const YEAR_TO_FLAGS: [YearFlags; 400] = [
 
 #[generate_trait]
 pub impl YearFlagsImpl of YearFlagsTrait {
+    #[inline]
     fn from_year(year: i32) -> YearFlags {
-        // Self::from_year_mod_400(year % 400)
         Self::from_year_mod_400(rem_euclid(year, 400).try_into().unwrap())
     }
 
+    #[inline]
     fn from_year_mod_400(year: u32) -> YearFlags {
         *YEAR_TO_FLAGS.span()[year % 400]
     }
 
+    #[inline]
     fn ndays(self: @YearFlags) -> u32 {
-        let leap_year_flag = ushr((*self.flags).into(), 3);
+        let leap_year_flag = u32_shr((*self.flags).into(), 3);
         366 - leap_year_flag.try_into().unwrap()
     }
 
+    #[inline]
     fn isoweek_delta(self: @YearFlags) -> u32 {
         let mut delta: u32 = (*self.flags).try_into().unwrap() & 0b0111;
         if delta < 3 {
@@ -90,8 +93,9 @@ pub impl YearFlagsImpl of YearFlagsTrait {
         delta
     }
 
-    fn nisoweeks(self: @YearFlags) -> u32 {
-        52 + ushr(0b0000_0100_0000_0110, *self.flags) % 2
+    #[inline]
+    const fn nisoweeks(self: @YearFlags) -> u32 {
+        52 + u32_shr(0b0000_0100_0000_0110, *self.flags) % 2
     }
 }
 
@@ -103,7 +107,7 @@ const MAX_MDL: u32 = (12 * 2_u32.pow(6)) | (31 * 2_u32.pow(1)) | 1;
 // ordinal-leapyear. OL = MDL - adjustment.
 // Dates that do not exist are encoded as `XX`.
 const XX: u8 = 0;
-pub const MDL_TO_OL: [u8; MAX_MDL + 1] = [
+const MDL_TO_OL: [u8; MAX_MDL + 1] = [
     XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
     XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX,
     XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, XX, // 0
@@ -216,7 +220,7 @@ const OL_TO_MDL: [u8; MAX_OL + 1] = [
 /// table lookup, which is good for performance.
 #[derive(Clone, Copy, PartialEq, Drop, Debug)]
 pub struct Mdf {
-    pub mdf: u32,
+    mdf: u32,
 }
 
 #[generate_trait]
@@ -229,9 +233,10 @@ pub impl MdfImpl of MdfTrait {
     /// # Errors
     ///
     /// Returns `None` if `month > 12` or `day > 31`.
+    #[inline]
     fn new(month: u32, day: u32, flags: YearFlags) -> Option<Mdf> {
         match month <= 12 && day <= 31 {
-            true => Some(Mdf { mdf: ushl(month, 9) | ushl(day, 4) | flags.flags.into() }),
+            true => Some(Mdf { mdf: u32_shl(month, 9) | u32_shl(day, 4) | flags.flags.into() }),
             false => None,
         }
     }
@@ -240,18 +245,20 @@ pub impl MdfImpl of MdfTrait {
     /// `flags`.
     ///
     /// The `ol` is trusted to be valid, and the `flags` are trusted to match it.
+    #[inline]
     fn from_ol(ol: i32, flags: YearFlags) -> Mdf {
         // debug_assert!(ol > 1 && ol <= MAX_OL as i32);
         // Array is indexed from `[2..=MAX_OL]`, with a `0` index having a meaningless value.
         // Mdf(((ol as u32 + OL_TO_MDL[ol as usize] as u32) << 3) | flags as u32)
         let ol_u32: u32 = ol.try_into().unwrap();
         let mdl = *OL_TO_MDL.span()[ol_u32];
-        Mdf { mdf: ushl(ol_u32 + mdl.into(), 3) | flags.flags.into() }
+        Mdf { mdf: u32_shl(ol_u32 + mdl.into(), 3) | flags.flags.into() }
     }
 
     /// Returns the month of this `Mdf`.
-    fn month(self: @Mdf) -> u32 {
-        ushr(*self.mdf, 9)
+    #[inline]
+    const fn month(self: @Mdf) -> u32 {
+        u32_shr(*self.mdf, 9)
     }
 
     /// Replaces the month of this `Mdf`, keeping the day and flags.
@@ -259,17 +266,19 @@ pub impl MdfImpl of MdfTrait {
     /// # Errors
     ///
     /// Returns `None` if `month > 12`.
+    #[inline]
     fn with_month(self: @Mdf, month: u32) -> Option<Mdf> {
         if month > 12 {
             return None;
         }
 
-        Some(Mdf { mdf: (*self.mdf & 0b0_0001_1111_1111) | ushl(month, 9) })
+        Some(Mdf { mdf: (*self.mdf & 0b0_0001_1111_1111) | u32_shl(month, 9) })
     }
 
     /// Returns the day of this `Mdf`.
-    fn day(self: @Mdf) -> u32 {
-        ushr(*self.mdf, 4) & 0b1_1111
+    #[inline]
+    const fn day(self: @Mdf) -> u32 {
+        u32_shr(*self.mdf, 4) & 0b1_1111
     }
 
     /// Replaces the day of this `Mdf`, keeping the month and flags.
@@ -277,16 +286,18 @@ pub impl MdfImpl of MdfTrait {
     /// # Errors
     ///
     /// Returns `None` if `day > 31`.
+    #[inline]
     fn with_day(self: @Mdf, day: u32) -> Option<Mdf> {
         if day > 31 {
             return None;
         }
 
-        Some(Mdf { mdf: (*self.mdf & 0b1_1110_0000_1111) | ushl(day, 4) })
+        Some(Mdf { mdf: (*self.mdf & 0b1_1110_0000_1111) | u32_shl(day, 4) })
     }
 
     /// Replaces the flags of this `Mdf`, keeping the month and day.
-    fn with_flags(self: @Mdf, flags: YearFlags) -> Mdf {
+    #[inline]
+    const fn with_flags(self: @Mdf, flags: YearFlags) -> Mdf {
         Mdf { mdf: (*self.mdf & 0b1_1111_1111_0000) | flags.flags.into() }
     }
 
@@ -299,13 +310,14 @@ pub impl MdfImpl of MdfTrait {
     ///
     /// Returns `None` if `month == 0` or `day == 0`, or if a the given day does not exist in the
     /// given month.
+    #[inline]
     fn ordinal(self: @Mdf) -> Option<u32> {
-        let mdl = ushr(*self.mdf, 3);
+        let mdl = u32_shr(*self.mdf, 3);
         let ol = *MDL_TO_OL.span()[mdl];
         if ol == XX {
             None
         } else {
-            Some(ushr(mdl - ol.into(), 1))
+            Some(u32_shr(mdl - ol.into(), 1))
         }
     }
 
@@ -318,13 +330,20 @@ pub impl MdfImpl of MdfTrait {
     ///
     /// Returns `None` if `month == 0` or `day == 0`, or if a the given day does not exist in the
     /// given month.
+    #[inline]
     fn ordinal_and_flags(self: @Mdf) -> Option<u32> {
-        let mdl = ushr(*self.mdf, 3);
+        let mdl = u32_shr(*self.mdf, 3);
         let ol = *MDL_TO_OL.span()[mdl];
         if ol == XX {
             None
         } else {
-            Some(*self.mdf - ushl(ol.into(), 3))
+            Some(*self.mdf - u32_shl(ol.into(), 3))
         }
+    }
+
+    // #[cfg(test)]
+    fn valid(self: @Mdf) -> bool {
+        let mdl = u32_shr(*self.mdf, 3);
+        *MDL_TO_OL.span()[mdl.try_into().unwrap()] > 0
     }
 }

@@ -1,11 +1,14 @@
-use core::fmt::{Debug, Display, Error, Formatter};
-use datetime::format::formatting::write_hundreds;
-use datetime::time_delta::{TimeDelta, TimeDeltaTrait};
-use datetime::utils::rem_euclid;
+//! ISO 8601 time without timezone.
 
-#[derive(Clone, Copy, PartialEq, Drop)]
+use core::fmt::{Debug, Display, Error, Formatter};
+use super::format::formatting::write_hundreds;
+use super::time_delta::{TimeDelta, TimeDeltaTrait};
+use super::traits::Timelike;
+use super::utils::rem_euclid;
+
+#[derive(Clone, Copy, PartialEq, Drop, Serde, starknet::Store)]
 pub struct Time {
-    pub secs: u32,
+    pub(crate) secs: u32,
 }
 
 #[generate_trait]
@@ -32,6 +35,7 @@ pub impl TimeImpl of TimeTrait {
     /// assert!(from_hms_opt(23, 60, 0).is_none());
     /// assert!(from_hms_opt(23, 59, 60).is_none());
     /// ```
+    #[inline]
     fn from_hms_opt(hour: u32, min: u32, sec: u32) -> Option<Time> {
         if (hour >= 24 || min >= 60 || sec >= 60) {
             return None;
@@ -62,6 +66,7 @@ pub impl TimeImpl of TimeTrait {
     /// assert!(from_nsecs_opt(86_400, 0).is_none());
     /// assert!(from_nsecs_opt(86399, 2_000_000_000).is_none());
     /// ```
+    #[inline]
     fn from_num_seconds_from_midnight_opt(secs: u32) -> Option<Time> {
         if secs >= 86_400 {
             return None;
@@ -123,6 +128,7 @@ pub impl TimeImpl of TimeTrait {
     ///     (from_hms(1, 4, 5), -86_400)
     /// );
     /// ```
+    #[inline]
     fn overflowing_sub_signed(self: @Time, rhs: TimeDelta) -> (Time, i64) {
         let (time, rhs) = self.overflowing_add_signed(-rhs);
         (time, -rhs) // safe to negate, rhs is within +/- (2^63 / 1000)
@@ -210,11 +216,11 @@ pub impl TimeImpl of TimeTrait {
 
         let secs: i64 = (*self.secs).try_into().unwrap() - rhs.secs.try_into().unwrap();
 
-        TimeDeltaTrait::new(secs).unwrap()
+        TimeDeltaTrait::new(secs).expect('must be in range')
     }
 
     /// Returns a triple of the hour, minute and second numbers.
-    fn hms(self: @Time) -> (u32, u32, u32) {
+    const fn hms(self: @Time) -> (u32, u32, u32) {
         let sec = *self.secs % 60;
         let mins = *self.secs / 60;
         let min = mins % 60;
@@ -222,13 +228,12 @@ pub impl TimeImpl of TimeTrait {
         (hour, min, sec)
     }
 
-    // Returns the number of non-leap seconds past the last midnight.
-    // This duplicates `Timelike::num_seconds_from_midnight()`, because trait methods can't be const
-    // yet.
-    fn num_seconds_from_midnight(self: @Time) -> u32 {
-        *self.secs
-    }
+    /// The earliest possible `NaiveTime`
+    const MIN: Time = Time { secs: 0 };
+    const MAX: Time = Time { secs: 23 * 3600 + 59 * 60 + 59 };
+}
 
+impl TimeTimelikeImpl of Timelike<Time> {
     /// Returns the hour number from 0 to 23.
     ///
     /// # Example
@@ -239,7 +244,8 @@ pub impl TimeImpl of TimeTrait {
     /// assert_eq!(NaiveTime::from_hms_opt(0, 0, 0).unwrap().hour(), 0);
     /// assert_eq!(NaiveTime::from_hms_nano_opt(23, 56, 4, 12_345_678).unwrap().hour(), 23);
     /// ```
-    fn hour(self: @Time) -> u32 {
+    #[inline]
+    const fn hour(self: @Time) -> u32 {
         let (hour, _, _) = self.hms();
         hour
     }
@@ -254,7 +260,8 @@ pub impl TimeImpl of TimeTrait {
     /// assert_eq!(NaiveTime::from_hms_opt(0, 0, 0).unwrap().minute(), 0);
     /// assert_eq!(NaiveTime::from_hms_nano_opt(23, 56, 4, 12_345_678).unwrap().minute(), 56);
     /// ```
-    fn minute(self: @Time) -> u32 {
+    #[inline]
+    const fn minute(self: @Time) -> u32 {
         let (_, min, _) = self.hms();
         min
     }
@@ -282,7 +289,8 @@ pub impl TimeImpl of TimeTrait {
     /// assert_eq!(leap.format("%H:%M:%S").to_string(), "23:59:60");
     /// # }
     /// ```
-    fn second(self: @Time) -> u32 {
+    #[inline]
+    const fn second(self: @Time) -> u32 {
         let (_, _, sec) = self.hms();
         sec
     }
@@ -303,6 +311,7 @@ pub impl TimeImpl of TimeTrait {
     /// 12_345_678).unwrap()));
     /// assert_eq!(dt.with_hour(24), None);
     /// ```
+    #[inline]
     fn with_hour(self: @Time, hour: u32) -> Option<Time> {
         if hour >= 24 {
             return None;
@@ -329,6 +338,7 @@ pub impl TimeImpl of TimeTrait {
     /// );
     /// assert_eq!(dt.with_minute(60), None);
     /// ```
+    #[inline]
     fn with_minute(self: @Time, min: u32) -> Option<Time> {
         if min >= 60 {
             return None;
@@ -358,6 +368,7 @@ pub impl TimeImpl of TimeTrait {
     /// );
     /// assert_eq!(dt.with_second(60), None);
     /// ```
+    #[inline]
     fn with_second(self: @Time, sec: u32) -> Option<Time> {
         if sec >= 60 {
             return None;
@@ -366,9 +377,27 @@ pub impl TimeImpl of TimeTrait {
         Some(Time { secs })
     }
 
-    /// The earliest possible `NaiveTime`
-    const MIN: Time = Time { secs: 0 };
-    const MAX: Time = Time { secs: 23 * 3600 + 59 * 60 + 59 };
+    /// Returns the number of non-leap seconds past the last midnight.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use chrono::{NaiveTime, Timelike};
+    ///
+    /// assert_eq!(NaiveTime::from_hms_opt(1, 2, 3).unwrap().num_seconds_from_midnight(), 3723);
+    /// assert_eq!(
+    ///     NaiveTime::from_hms_nano_opt(23, 56, 4,
+    ///     12_345_678).unwrap().num_seconds_from_midnight(), 86164
+    /// );
+    /// assert_eq!(
+    ///     NaiveTime::from_hms_milli_opt(23, 59, 59, 1_000).unwrap().num_seconds_from_midnight(),
+    ///     86399
+    /// );
+    /// ```
+    #[inline]
+    fn num_seconds_from_midnight(self: @Time) -> u32 {
+        *self.secs // do not repeat the calculation!
+    }
 }
 
 impl TimePartialOrd of PartialOrd<Time> {
