@@ -1,8 +1,13 @@
 [package]
 name = "url_parser"
 version = "0.1.0"
+edition = "2023_01"
 
 [dependencies]
 starknet = ">=2.3.1"
 
-[[target.starknet-contract]] 
+[dev-dependencies]
+cairo_test = "2.3.1"
+
+[[target.starknet-contract]]
+crate-type = ["lib"] 
