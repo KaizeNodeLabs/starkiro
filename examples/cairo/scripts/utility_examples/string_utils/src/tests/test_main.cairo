@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test_main {
-    use string_utility::{String, StringTrait};
+    use string_utility::string_utility::{String, StringTrait};
 
 
     #[test]
