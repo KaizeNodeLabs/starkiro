@@ -1,5 +1,5 @@
 use core::byte_array::ByteArray;
-use string_utility::{String, StringTrait};
+use string_utility::string_utility::{String, StringTrait};
 
 fn main() {
     // Example 1: Create a new string and display its length.
